@@ -1,0 +1,13 @@
+# Changes here will be overwritten by Copier
+Authors: Abel Soares Siqueira
+JuliaMinVersion: '1.10'
+License: Apache-2.0
+LicenseCopyrightHolders: Abel Soares Siqueira
+PackageName: TulipaBuilder
+PackageOwner: TulipaEnergy
+PackageUUID: 05fe4dc7-9a58-53a4-b912-b5673d74e816
+StrategyConfirmIncluded: false
+StrategyLevel: 1
+StrategyReviewExcluded: false
+_commit: v0.16.2
+_src_path: /home/abel/projects/work/bestie/BestieTemplate.jl
