@@ -14,7 +14,9 @@ makedocs(;
     authors = "Abel Soares Siqueira",
     repo = "https://github.com/TulipaEnergy/TulipaBuilder.jl/blob/{commit}{path}#{line}",
     sitename = "TulipaBuilder.jl",
-    format = Documenter.HTML(; canonical = "https://TulipaEnergy.github.io/TulipaBuilder.jl"),
+    format = Documenter.HTML(;
+        canonical = "https://TulipaEnergy.github.io/TulipaBuilder.jl",
+    ),
     pages = ["index.md"; numbered_pages],
 )
 

@@ -87,4 +87,4 @@ TB.attach_profile!(tulipa, :ccgt, :availability, 2030, 0.5 .+ 0.1 * randn(24))
 
 connection = TB.create_connection(tulipa)
 
-ep = TEM.run_scenario(connection, show_log = false)
+ep = TEM.run_scenario(connection, show_log = false, model_file_name = "model.lp")

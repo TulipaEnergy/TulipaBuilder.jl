@@ -37,4 +37,3 @@ function attach_both_years_data!(
     @assert milestone_year ≥ commission_year
     flow.both_years_data[(commission_year, milestone_year)] = Dict{Symbol,Any}(kwargs...)
 end
-
