@@ -145,4 +145,3 @@ function attach_profile!(
     asset = tulipa.graph[asset_name]
     attach_profile!(asset, profile_type, year, profile_value)
 end
-

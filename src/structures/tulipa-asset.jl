@@ -49,4 +49,3 @@ function attach_profile!(
 )
     asset.profiles[(profile_type, year)] = profile_value
 end
-

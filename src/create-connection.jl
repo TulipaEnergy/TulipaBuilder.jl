@@ -403,7 +403,6 @@ function create_connection(tulipa::TulipaData)
             "INSERT INTO year_data VALUES ($year, $year_length, $is_milestone)",
         )
     end
-    @info TIO.get_table(connection, "year_data")
 
     TC.dummy_cluster!(connection)
 
