@@ -7,7 +7,6 @@ using XLSX
 
 tulipa = TB.TulipaData()
 
-# TODO: Make the model feasible
 # TODO: Remove as much as possible to create a minimum viable example
 
 ### assets
@@ -15,8 +14,7 @@ tulipa = TB.TulipaData()
 # Investable will allow this to be used
 # Capacity > 0 means it's useful
 # investment_limit is inf so it scales as much as needed
-# investment_cost must be positive (TODO: Allow investment_cost = 0.0?)
-# ISSUE: add validation for investable=true => investment_method != "none"
+# investment_cost must be positive
 TB.add_asset!(tulipa, :ccgt, :producer, capacity = 2.0, investment_method = "simple")
 TB.attach_milestone_data!(tulipa, :ccgt, 2030, investable = true)
 TB.attach_commission_data!(tulipa, :ccgt, 2030, investment_cost = 3.0)
@@ -47,11 +45,6 @@ TB.add_flow!(tulipa, :solar, :demand)
 for asset in (:ccgt, :ocgt)
     TB.add_flow!(tulipa, asset, :demand)
 end
-
-# TODO: I shouldn't have to do this
-TB.attach_both_years_data!(tulipa, :ccgt, 2030, 2030)
-TB.attach_both_years_data!(tulipa, :ocgt, 2030, 2030)
-TB.attach_both_years_data!(tulipa, :demand, 2030, 2030)
 
 ### profiles
 

@@ -35,11 +35,6 @@ using Test
         add_flow!(tulipa, asset, :demand)
     end
 
-    ### temporary manual basic rows creation
-    attach_both_years_data!(tulipa, :ccgt, 2030, 2030)
-    attach_both_years_data!(tulipa, :ocgt, 2030, 2030)
-    attach_both_years_data!(tulipa, :demand, 2030, 2030)
-
     ### profiles
     domain = range(0.0, 1.0, length = 24)
     attach_profile!(tulipa, :solar, :availability, 2030, 4 * domain .* (1 .- domain))

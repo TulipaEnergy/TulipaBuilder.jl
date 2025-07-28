@@ -30,6 +30,8 @@ Here we list all these magic transformations, to help debug possible unexpected 
 - If data is attached via `attach_milestone_data!`, the year is further marker as `is_milestone = true`.
 - Missing combinations of `asset` and `year_data` are passed to `asset_milestone` and `asset_commission` rows
 - Missing combinations of `flow` and `year_data` are passed to `flow_milestone` and `flow_commission` rows
+- Automatically fills `asset_both` for `asset.investment_method != 'compact'` using the rows of `asset_milestone`, repeating `commission_year=milestone_year`
+- Automatically sets `assets_profiles.commission_year = profiles.year` for attached profiles.
 
 WIP: None of these are correctly tested
 

@@ -436,6 +436,21 @@ function create_connection(tulipa::TulipaData)
         )
     end
 
+    # Complement the asset_both tables with rows from asset_milestone
+    DuckDB.query(
+        connection,
+        "INSERT INTO asset_both BY NAME (
+            SELECT asset.asset, milestone_year, milestone_year as commission_year
+            FROM asset_milestone
+            JOIN asset ON asset_milestone.asset = asset.asset
+            ANTI JOIN asset_both
+                ON asset_both.asset = asset_milestone.asset
+                AND asset_both.milestone_year = asset_milestone.milestone_year
+            WHERE asset.investment_method != 'compact'
+        )
+        ",
+    )
+
     # TODO: Move this out of here
     TC.dummy_cluster!(connection)
     TEM.populate_with_defaults!(connection)
