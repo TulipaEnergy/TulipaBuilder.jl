@@ -49,20 +49,9 @@ for asset in (:ccgt, :ocgt)
 end
 
 # TODO: I shouldn't have to do this
-# ISSUE: Some of these should be caught by validation
-TB.attach_commission_data!(tulipa, :solar, 2030)
-TB.attach_commission_data!(tulipa, :demand, 2030)
-TB.attach_milestone_data!(tulipa, :solar, 2030)
 TB.attach_both_years_data!(tulipa, :ccgt, 2030, 2030)
 TB.attach_both_years_data!(tulipa, :ocgt, 2030, 2030)
 TB.attach_both_years_data!(tulipa, :demand, 2030, 2030)
-TB.attach_commission_data!(tulipa, :ccgt, :demand, 2030)
-TB.attach_commission_data!(tulipa, :solar, :demand, 2030)
-TB.attach_commission_data!(tulipa, :ocgt, :demand, 2030)
-TB.attach_milestone_data!(tulipa, :ccgt, :demand, 2030)
-TB.attach_milestone_data!(tulipa, :solar, :demand, 2030)
-TB.attach_milestone_data!(tulipa, :ocgt, :demand, 2030)
-
 
 ### profiles
 

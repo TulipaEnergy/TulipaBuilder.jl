@@ -53,8 +53,8 @@ function create_connection(tulipa::TulipaData)
         for (key, value) in asset.basic_data
             key = String(key)
             if !haskey(TEM.schema["asset"], key)
-                continue
                 @warn "Ignoring column $key from asset '$asset_name'"
+                continue
             end
             col_type = TEM.schema["asset"][key]["type"]
             col_value = TIO.FmtSQL.fmt_quote(value)
@@ -91,8 +91,8 @@ function create_connection(tulipa::TulipaData)
             for (key, value) in values
                 key = String(key)
                 if !haskey(TEM.schema["asset_both"], key)
-                    continue
                     @warn "Ignoring column $key from asset '$asset_name' (both years)"
+                    continue
                 end
                 col_type = TEM.schema["asset_both"][key]["type"]
                 col_value = TIO.FmtSQL.fmt_quote(value)
@@ -128,8 +128,8 @@ function create_connection(tulipa::TulipaData)
             for (key, value) in values
                 key = String(key)
                 if !haskey(TEM.schema["asset_commission"], key)
-                    continue
                     @warn "Ignoring column $key from asset '$asset_name' (commission year)"
+                    continue
                 end
                 col_type = TEM.schema["asset_commission"][key]["type"]
                 col_value = TIO.FmtSQL.fmt_quote(value)
@@ -166,8 +166,8 @@ function create_connection(tulipa::TulipaData)
             for (key, value) in values
                 key = String(key)
                 if !haskey(TEM.schema["asset_milestone"], key)
-                    continue
                     @warn "Ignoring column $key from asset '$asset_name' (milestone year)"
+                    continue
                 end
                 col_type = TEM.schema["asset_milestone"][key]["type"]
                 col_value = TIO.FmtSQL.fmt_quote(value)
@@ -199,8 +199,8 @@ function create_connection(tulipa::TulipaData)
         for (key, value) in flow.basic_data
             key = String(key)
             if !haskey(TEM.schema["flow"], key)
-                continue
                 @warn "Ignoring column $key from flow ('$from_asset','$to_asset')"
+                continue
             end
             col_type = TEM.schema["flow"][key]["type"]
             col_value = TIO.FmtSQL.fmt_quote(value)
@@ -241,8 +241,8 @@ function create_connection(tulipa::TulipaData)
             for (key, value) in values
                 key = String(key)
                 if !haskey(TEM.schema["flow_both"], key)
-                    continue
                     @warn "Ignoring column $key from flow ('$from_asset','$to_asset') (both years)"
+                    continue
                 end
                 col_type = TEM.schema["flow_both"][key]["type"]
                 col_value = TIO.FmtSQL.fmt_quote(value)
@@ -282,8 +282,8 @@ function create_connection(tulipa::TulipaData)
             for (key, value) in values
                 key = String(key)
                 if !haskey(TEM.schema["flow_commission"], key)
-                    continue
                     @warn "Ignoring column $key from flow ('$from_asset','$to_asset') (commission years)"
+                    continue
                 end
                 col_type = TEM.schema["flow_commission"][key]["type"]
                 col_value = TIO.FmtSQL.fmt_quote(value)
@@ -323,8 +323,8 @@ function create_connection(tulipa::TulipaData)
             for (key, value) in values
                 key = String(key)
                 if !haskey(TEM.schema["flow_milestone"], key)
-                    continue
                     @warn "Ignoring column $key from flow ('$from_asset','$to_asset') (milestone years)"
+                    continue
                 end
                 col_type = TEM.schema["flow_milestone"][key]["type"]
                 col_value = TIO.FmtSQL.fmt_quote(value)
@@ -404,9 +404,40 @@ function create_connection(tulipa::TulipaData)
         )
     end
 
-    TC.dummy_cluster!(connection)
+    # Complement the *-milestone and *-commission tables with missing *,year combinations
+    # TODO :Evaluate CREATE OR REPLACE alternative
+    for t_prefix in (:asset, :flow), t_suffix in (:commission, :milestone)
+        table_name = "$(t_prefix)_$(t_suffix)"
+        year_col = "$(t_suffix)_year"
+        main_cols = t_prefix == :asset ? [:asset] : [:from_asset, :to_asset]
+        where_is_milestone = t_suffix == :milestone ? "WHERE is_milestone" : ""
 
-    # TODO: Implement clustering
+        cte_all_cols = join(("$t_prefix.$col" for col in main_cols), ", ")
+        cte_all = "SELECT $cte_all_cols, year_data.year
+            FROM $t_prefix CROSS JOIN year_data $where_is_milestone"
+
+        cte_rem_cols = join(("cte_all.$col" for col in main_cols), ", ")
+        cte_rem_join =
+            join(("cte_all.$col = $table_name.$col" for col in main_cols), " AND ")
+        cte_rem = "SELECT $cte_rem_cols, cte_all.year AS $year_col
+            FROM cte_all ANTI JOIN $table_name
+            ON $cte_rem_join AND cte_all.year = $table_name.$year_col"
+
+        DuckDB.query(
+            connection,
+            "INSERT INTO $table_name BY NAME (
+                WITH cte_all AS ($cte_all),
+                    cte_remaining_rows AS (
+                    $cte_rem
+                )
+                SELECT * FROM cte_remaining_rows
+            )
+            ",
+        )
+    end
+
+    # TODO: Move this out of here
+    TC.dummy_cluster!(connection)
     TEM.populate_with_defaults!(connection)
 
     return connection

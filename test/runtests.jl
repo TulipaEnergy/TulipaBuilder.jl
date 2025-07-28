@@ -36,18 +36,9 @@ using Test
     end
 
     ### temporary manual basic rows creation
-    attach_commission_data!(tulipa, :solar, 2030)
-    attach_commission_data!(tulipa, :demand, 2030)
-    attach_milestone_data!(tulipa, :solar, 2030)
     attach_both_years_data!(tulipa, :ccgt, 2030, 2030)
     attach_both_years_data!(tulipa, :ocgt, 2030, 2030)
     attach_both_years_data!(tulipa, :demand, 2030, 2030)
-    attach_commission_data!(tulipa, :ccgt, :demand, 2030)
-    attach_commission_data!(tulipa, :solar, :demand, 2030)
-    attach_commission_data!(tulipa, :ocgt, :demand, 2030)
-    attach_milestone_data!(tulipa, :ccgt, :demand, 2030)
-    attach_milestone_data!(tulipa, :solar, :demand, 2030)
-    attach_milestone_data!(tulipa, :ocgt, :demand, 2030)
 
     ### profiles
     domain = range(0.0, 1.0, length = 24)
@@ -66,3 +57,5 @@ using Test
     )
     @test JuMP.is_solved_and_feasible(ep.model)
 end
+
+# Test warning for ignored column

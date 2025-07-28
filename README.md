@@ -19,6 +19,20 @@ TulipaBuilder.jl provides a graph-based approach to building energy system model
 - **Schema-driven design**: Dynamically compatible with different TulipaEnergyModel.jl versions
 - **Simplified workflow**: Streamlined process from model creation to optimization
 
+### Magic transformations
+
+TulipaBuilder.jl takes liberties when creating TulipaEnergyModel problems.
+These implicit assumption are made to make our life easier, with the drawback of obfuscating the underlying data model.
+
+Here we list all these magic transformations, to help debug possible unexpected behaviour, and to drive development and testing of the package.
+
+- The `year_data` is automatically determined from the attached profiles and attached commission and milestone data.
+- If data is attached via `attach_milestone_data!`, the year is further marker as `is_milestone = true`.
+- Missing combinations of `asset` and `year_data` are passed to `asset_milestone` and `asset_commission` rows
+- Missing combinations of `flow` and `year_data` are passed to `flow_milestone` and `flow_commission` rows
+
+WIP: None of these are correctly tested
+
 ## Target Users
 
 - **End-users** looking to create Tulipa models with maximum convenience
