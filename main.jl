@@ -15,7 +15,15 @@ tulipa = TB.TulipaData()
 # Capacity > 0 means it's useful
 # investment_limit is inf so it scales as much as needed
 # investment_cost must be positive
-TB.add_asset!(tulipa, :ccgt, :producer, capacity = 2.0, investment_method = "simple")
+TB.add_asset!(
+    tulipa,
+    :ccgt,
+    :producer,
+    capacity = 2.0,
+    investment_method = "simple",
+    # investable = true,
+    # investment_cost = 3.0,
+)
 TB.attach_milestone_data!(tulipa, :ccgt, 2030, investable = true)
 TB.attach_commission_data!(tulipa, :ccgt, 2030, investment_cost = 3.0)
 

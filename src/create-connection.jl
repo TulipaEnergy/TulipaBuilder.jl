@@ -22,6 +22,15 @@ function create_empty_table_from_schema!(connection, table_name, schema, columns
     return connection
 end
 
+function _get_select_query_row(key, value, table_name)
+    key = String(key)
+    if !haskey(TEM.schema[table_name], key)
+        return ""
+    end
+    col_type = TEM.schema[table_name][key]["type"]
+    col_value = TIO.FmtSQL.fmt_quote(value)
+    return "$col_value::$col_type AS \"$key\", "
+end
 
 function create_connection(tulipa::TulipaData)
     connection = DBInterface.connect(DuckDB.DB)
@@ -51,14 +60,12 @@ function create_connection(tulipa::TulipaData)
         query = "INSERT INTO asset BY NAME (SELECT '$asset_name' AS asset, '$asset_type' AS type, "
         asset = tulipa.graph[asset_name]
         for (key, value) in asset.basic_data
-            key = String(key)
-            if !haskey(TEM.schema["asset"], key)
+            query_row = _get_select_query_row(key, value, "asset")
+            if query_row == ""
                 @warn "Ignoring column $key from asset '$asset_name'"
                 continue
             end
-            col_type = TEM.schema["asset"][key]["type"]
-            col_value = TIO.FmtSQL.fmt_quote(value)
-            query *= "$col_value::$col_type AS \"$key\", "
+            query *= query_row
         end
         query *= ")"
         run_query(query)
@@ -89,14 +96,12 @@ function create_connection(tulipa::TulipaData)
                     $commission_year AS commission_year,
             """
             for (key, value) in values
-                key = String(key)
-                if !haskey(TEM.schema["asset_both"], key)
+                query_row = _get_select_query_row(key, value, "asset_both")
+                if query_row == ""
                     @warn "Ignoring column $key from asset '$asset_name' (both years)"
                     continue
                 end
-                col_type = TEM.schema["asset_both"][key]["type"]
-                col_value = TIO.FmtSQL.fmt_quote(value)
-                query *= "$col_value::$col_type AS \"$key\", "
+                query *= query_row
             end
             query *= ")"
             run_query(query)
@@ -126,17 +131,16 @@ function create_connection(tulipa::TulipaData)
                 $commission_year AS commission_year,
             """
             for (key, value) in values
-                key = String(key)
-                if !haskey(TEM.schema["asset_commission"], key)
+                query_row = _get_select_query_row(key, value, "asset_commission")
+                if query_row == ""
                     @warn "Ignoring column $key from asset '$asset_name' (commission year)"
                     continue
                 end
-                col_type = TEM.schema["asset_commission"][key]["type"]
-                col_value = TIO.FmtSQL.fmt_quote(value)
-                query *= "$col_value::$col_type AS \"$key\", "
+                query *= query_row
             end
             query *= ")"
             run_query(query)
+
         end
     end
 
@@ -164,14 +168,12 @@ function create_connection(tulipa::TulipaData)
                 $milestone_year AS milestone_year,
             """
             for (key, value) in values
-                key = String(key)
-                if !haskey(TEM.schema["asset_milestone"], key)
+                query_row = _get_select_query_row(key, value, "asset_milestone")
+                if query_row == ""
                     @warn "Ignoring column $key from asset '$asset_name' (milestone year)"
                     continue
                 end
-                col_type = TEM.schema["asset_milestone"][key]["type"]
-                col_value = TIO.FmtSQL.fmt_quote(value)
-                query *= "$col_value::$col_type AS \"$key\", "
+                query *= query_row
             end
             query *= ")"
             run_query(query)
@@ -197,14 +199,12 @@ function create_connection(tulipa::TulipaData)
             '$to_asset' AS to_asset,
         """
         for (key, value) in flow.basic_data
-            key = String(key)
-            if !haskey(TEM.schema["flow"], key)
+            query_row = _get_select_query_row(key, value, "flow")
+            if query_row == ""
                 @warn "Ignoring column $key from flow ('$from_asset','$to_asset')"
                 continue
             end
-            col_type = TEM.schema["flow"][key]["type"]
-            col_value = TIO.FmtSQL.fmt_quote(value)
-            query *= "$col_value::$col_type AS \"$key\", "
+            query *= query_row
         end
         query *= ")"
         run_query(query)
@@ -239,14 +239,12 @@ function create_connection(tulipa::TulipaData)
                     $commission_year AS commission_year,
             """
             for (key, value) in values
-                key = String(key)
-                if !haskey(TEM.schema["flow_both"], key)
+                query_row = _get_select_query_row(key, value, "flow_both")
+                if query_row == ""
                     @warn "Ignoring column $key from flow ('$from_asset','$to_asset') (both years)"
                     continue
                 end
-                col_type = TEM.schema["flow_both"][key]["type"]
-                col_value = TIO.FmtSQL.fmt_quote(value)
-                query *= "$col_value::$col_type AS \"$key\", "
+                query *= query_row
             end
             query *= ")"
             run_query(query)
@@ -280,14 +278,12 @@ function create_connection(tulipa::TulipaData)
                     $commission_year AS commission_year,
             """
             for (key, value) in values
-                key = String(key)
-                if !haskey(TEM.schema["flow_commission"], key)
+                query_row = _get_select_query_row(key, value, "flow_commission")
+                if query_row == ""
                     @warn "Ignoring column $key from flow ('$from_asset','$to_asset') (commission years)"
                     continue
                 end
-                col_type = TEM.schema["flow_commission"][key]["type"]
-                col_value = TIO.FmtSQL.fmt_quote(value)
-                query *= "$col_value::$col_type AS \"$key\", "
+                query *= query_row
             end
             query *= ")"
             run_query(query)
@@ -321,14 +317,12 @@ function create_connection(tulipa::TulipaData)
                     $milestone_year AS milestone_year,
             """
             for (key, value) in values
-                key = String(key)
-                if !haskey(TEM.schema["flow_milestone"], key)
+                query_row = _get_select_query_row(key, value, "flow_milestone")
+                if query_row == ""
                     @warn "Ignoring column $key from flow ('$from_asset','$to_asset') (milestone years)"
                     continue
                 end
-                col_type = TEM.schema["flow_milestone"][key]["type"]
-                col_value = TIO.FmtSQL.fmt_quote(value)
-                query *= "$col_value::$col_type AS \"$key\", "
+                query *= query_row
             end
             query *= ")"
             run_query(query)
