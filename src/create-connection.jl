@@ -32,6 +32,34 @@ function _get_select_query_row(key, value, table_name)
     return "$col_value::$col_type AS \"$key\", "
 end
 
+"""
+    propagate_year_data!(tulipa)
+
+Propagates keys from `asset` to `asset_milestone`, `asset_commission` and `asset_both`, to avoid explicitly attaching a global value.
+"""
+function propagate_year_data!(tulipa)
+    # Propagate from asset to asset_milestone
+    years = keys(tulipa.years)
+    for asset_name in MetaGraphsNext.labels(tulipa.graph)
+        asset = tulipa.graph[asset_name]
+
+        for (table_name, attach!) in (
+            ("asset_milestone", attach_milestone_data!),
+            ("asset_commission", attach_commission_data!),
+        )
+            relevant_keys = Dict(
+                key => value for (key, value) in asset.basic_data if
+                haskey(TEM.schema[table_name], string(key))
+            )
+            for year in years
+                attach!(asset, year; on_conflict = :skip, relevant_keys...)
+            end
+        end
+    end
+end
+
+# IDEA: function for_each_asset(f, tulipa)
+
 function create_connection(tulipa::TulipaData)
     connection = DBInterface.connect(DuckDB.DB)
     run_query(s) = DuckDB.query(connection, s)
@@ -43,6 +71,9 @@ function create_connection(tulipa::TulipaData)
 
         return union(keys.(values(d))...)
     end
+
+    # Propagate yearly information before continuing
+    propagate_year_data!(tulipa)
 
     # Table asset
     # TODO: This is a terrible way of doing this

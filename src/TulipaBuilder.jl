@@ -24,6 +24,9 @@ const PerYear{T} = Dict{Int,T}
 const PerYears{T} = Dict{Tuple{Int,Int},T}
 const PerProfileType{T} = Dict{ProfileType,T}
 
+# utils
+include("utils.jl")
+
 # structures
 include("structures/tulipa-asset.jl")
 include("structures/tulipa-flow.jl")

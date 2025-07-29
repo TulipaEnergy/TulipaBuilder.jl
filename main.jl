@@ -7,8 +7,6 @@ using XLSX
 
 tulipa = TB.TulipaData()
 
-# TODO: Remove as much as possible to create a minimum viable example
-
 ### assets
 # Asset: CCGT
 # Investable will allow this to be used
@@ -21,11 +19,9 @@ TB.add_asset!(
     :producer,
     capacity = 2.0,
     investment_method = "simple",
-    # investable = true,
-    # investment_cost = 3.0,
+    investable = true,
+    investment_cost = 3.0,
 )
-TB.attach_milestone_data!(tulipa, :ccgt, 2030, investable = true)
-TB.attach_commission_data!(tulipa, :ccgt, 2030, investment_cost = 3.0)
 
 # Asset: Solar
 # Not investable: initial_units > 0 and capacity > 0
@@ -40,13 +36,18 @@ TB.add_asset!(
 TB.attach_both_years_data!(tulipa, :solar, 2030, 2030, initial_units = 10)
 
 # Asset: OCGT
-TB.add_asset!(tulipa, :ocgt, :producer, capacity = 3.0, investment_method = "simple")
-TB.attach_milestone_data!(tulipa, :ocgt, 2030, investable = true)
-TB.attach_commission_data!(tulipa, :ocgt, 2030, investment_cost = 4.0)
+TB.add_asset!(
+    tulipa,
+    :ocgt,
+    :producer,
+    capacity = 3.0,
+    investment_method = "simple",
+    investable = true,
+    investment_cost = 4.0,
+)
 
 # Asset: Demand
-TB.add_asset!(tulipa, :demand, :consumer)
-TB.attach_milestone_data!(tulipa, :demand, 2030, peak_demand = 30.0)
+TB.add_asset!(tulipa, :demand, :consumer, peak_demand = 30.0)
 
 ### flow
 TB.add_flow!(tulipa, :solar, :demand)

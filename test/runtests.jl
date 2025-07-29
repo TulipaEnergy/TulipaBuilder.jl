@@ -8,9 +8,15 @@ using Test
     tulipa = TulipaData()
 
     ### assets
-    add_asset!(tulipa, :ccgt, :producer, capacity = 2.0, investment_method = "simple")
-    attach_milestone_data!(tulipa, :ccgt, 2030, investable = true)
-    attach_commission_data!(tulipa, :ccgt, 2030, investment_cost = 3.0)
+    add_asset!(
+        tulipa,
+        :ccgt,
+        :producer,
+        capacity = 2.0,
+        investment_method = "simple",
+        investable = true,
+        investment_cost = 3.0,
+    )
 
     add_asset!(
         tulipa,
@@ -22,12 +28,17 @@ using Test
     )
     attach_both_years_data!(tulipa, :solar, 2030, 2030, initial_units = 10)
 
-    add_asset!(tulipa, :ocgt, :producer, capacity = 3.0, investment_method = "simple")
-    attach_milestone_data!(tulipa, :ocgt, 2030, investable = true)
-    attach_commission_data!(tulipa, :ocgt, 2030, investment_cost = 4.0)
+    add_asset!(
+        tulipa,
+        :ocgt,
+        :producer,
+        capacity = 3.0,
+        investment_method = "simple",
+        investable = true,
+        investment_cost = 4.0,
+    )
 
-    add_asset!(tulipa, :demand, :consumer)
-    attach_milestone_data!(tulipa, :demand, 2030, peak_demand = 30.0)
+    add_asset!(tulipa, :demand, :consumer, peak_demand = 30.0)
 
     ### flows
     add_flow!(tulipa, :solar, :demand)

@@ -23,12 +23,57 @@ mutable struct TulipaAsset
     end
 end
 
-function attach_commission_data!(asset::TulipaAsset, year; kwargs...)
-    asset.commission_year_data[year] = Dict{Symbol,Any}(kwargs...)
+function attach_commission_data!(
+    asset::TulipaAsset,
+    year;
+    on_conflict = :overwrite,
+    kwargs...,
+)
+    # If the year has not been set, then it is not possible to have conflicts
+    if !haskey(asset.commission_year_data, year)
+        asset.commission_year_data[year] = Dict{Symbol,Any}(kwargs...)
+        return asset
+    end
+
+    for (k, v) in kwargs
+        # Either the key already exists or it is allowed to s
+        if !haskey(asset.commission_year_data[year], k) || on_conflict == :overwrite
+            asset.commission_year_data[year][k] = v
+        elseif on_conflict == :error
+            throw(
+                ExistingKeyError(
+                    "Key $k has already been attached for asset=$(asset.name), commission_year=$year",
+                ),
+            )
+        end # on_conflict = :skip
+    end
 end
 
-function attach_milestone_data!(asset::TulipaAsset, year; kwargs...)
-    asset.milestone_year_data[year] = Dict{Symbol,Any}(kwargs...)
+function attach_milestone_data!(
+    asset::TulipaAsset,
+    year;
+    on_conflict = :overwrite,
+    kwargs...,
+)
+    @info asset.name, year, kwargs
+    # If the year has not been set, then it is not possible to have conflicts
+    if !haskey(asset.milestone_year_data, year)
+        asset.milestone_year_data[year] = Dict{Symbol,Any}(kwargs...)
+        return asset
+    end
+
+    for (k, v) in kwargs
+        # Either the key already exists or it is allowed to s
+        if !haskey(asset.milestone_year_data[year], k) || on_conflict == :overwrite
+            asset.milestone_year_data[year][k] = v
+        elseif on_conflict == :error
+            throw(
+                ExistingKeyError(
+                    "Key $k has already been attached for asset=$(asset.name), milestone_year=$year",
+                ),
+            )
+        end # on_conflict = :skip
+    end
 end
 
 function attach_both_years_data!(

@@ -141,7 +141,7 @@ function attach_profile!(
     year::Int,
     profile_value::Vector,
 )
-    add_or_update_year!(tulipa, year, length = length(profile_value))
+    add_or_update_year!(tulipa, year, length = length(profile_value), is_milestone = true)
     asset = tulipa.graph[asset_name]
     attach_profile!(asset, profile_type, year, profile_value)
 end
