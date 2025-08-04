@@ -465,7 +465,10 @@ function create_connection(tulipa::TulipaData)
     DuckDB.query(
         connection,
         "INSERT INTO asset_both BY NAME (
-            SELECT asset.asset, milestone_year, milestone_year as commission_year
+            SELECT
+                asset.asset,
+                asset_milestone.milestone_year,
+                asset_milestone.milestone_year as commission_year
             FROM asset_milestone
             JOIN asset ON asset_milestone.asset = asset.asset
             ANTI JOIN asset_both
