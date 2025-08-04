@@ -3,4 +3,8 @@
     export TEM, run_scenario
     using JuMP
     export JuMP
+    using DuckDB
+    export DuckDB
+    using DataFrames: DataFrame
+    export DataFrame
 end
