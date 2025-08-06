@@ -160,6 +160,47 @@ end
     @test length(tulipa.years) == 4
 end
 
+@testitem "Magic transformation: attach_milestone_data! marks years as is_milestone=true" tags =
+    [:unit, :fast] setup = [CommonSetup] begin
+    # This test explicitly verifies the README magic transformation:
+    # "If data is attached via attach_milestone_data!, the year is further marker as is_milestone = true"
+    # Reference: README.md "Magic transformations" section
+    # Issue: https://github.com/TulipaEnergyModel/TulipaBuilder.jl/issues/3
+
+    tulipa = TulipaData()
+
+    # Test asset milestone data magic transformation
+    add_asset!(tulipa, :test_producer, :producer)
+    @test isempty(tulipa.years)
+
+    # Magic transformation: attach_milestone_data! → is_milestone = true
+    attach_milestone_data!(tulipa, :test_producer, 2030, investable = true)
+    @test haskey(tulipa.years, 2030)
+    @test tulipa.years[2030][:is_milestone] == true
+
+    # Test flow milestone data magic transformation
+    add_asset!(tulipa, :test_consumer, :consumer)
+    add_flow!(tulipa, :test_producer, :test_consumer)
+
+    # Magic transformation: attach_milestone_data! on flows → is_milestone = true
+    attach_milestone_data!(tulipa, :test_producer, :test_consumer, 2035, investable = true)
+    @test haskey(tulipa.years, 2035)
+    @test tulipa.years[2035][:is_milestone] == true
+
+    # Test both_years milestone magic transformation
+    attach_both_years_data!(tulipa, :test_producer, 2025, 2040, initial_units = 5)
+    @test haskey(tulipa.years, 2025)  # commission year
+    @test haskey(tulipa.years, 2040)  # milestone year
+    @test !haskey(tulipa.years[2025], :is_milestone)  # commission year not milestone
+    @test tulipa.years[2040][:is_milestone] == true    # milestone year marked as milestone
+
+    # Verify we have 4 years total: 2025 (commission), 2030, 2035, 2040 (all milestone except 2025)
+    @test length(tulipa.years) == 4
+    milestone_years =
+        [year for (year, props) in tulipa.years if get(props, :is_milestone, false)]
+    @test Set(milestone_years) == Set([2030, 2035, 2040])
+end
+
 @testitem "Integration test - demonstrates current system constraint with profiles" tags =
     [:integration, :fast] setup = [CommonSetup] begin
     # IMPORTANT: This test documents a current system constraint:

@@ -36,9 +36,19 @@ The package uses a graph-based approach where assets (producers, consumers) are 
 
 ### Testing
 
-```bash
-julia --project=test -e 'using Pkg; Pkg.test()'
-```
+**Primary Testing (CLI Runner)**: `julia --project=test test/runtests.jl`
+**Traditional tesing**: `julia --project=test -e 'using Pkg; Pkg.test()'`
+**Filtered Testing**: `julia --project=test test/runtests.jl --tags fast --exclude slow`
+
+The test runner supports filtering by:
+
+- `--tags tag1,tag2`: Run tests with ALL specified tags
+- `--exclude tag1,tag2`: Skip tests with ANY specified tags
+- `--file filename`: Run tests from files containing substring
+- `--name testname`: Run tests whose name contains substring
+- `--pattern text`: Run tests with name/filename containing pattern
+- `--list-tags`: Show available tags
+- `--help`: Show usage help
 
 ### Running the main example
 
@@ -54,7 +64,7 @@ julia --project=.
 
 # Install/update dependencies
 julia --project=. -e 'using Pkg; Pkg.instantiate()'
-julia --project=. -e 'using Pkg; Pkg.resolve()'
+julia --project=. -e 'using Pkg; Pkg.update()'
 ```
 
 ### Documentation
@@ -133,3 +143,95 @@ Key properties are schema-driven but commonly include:
 - `investment_cost`: Cost for commission years
 
 All assets require proper milestone and commission data attachment for valid models. The exact required fields depend on the TulipaEnergyModel version being used.
+
+### Testing Guidelines
+
+The project uses TestItem.jl with tags for selective test execution during development.
+
+#### Test Organization
+
+- **File naming**: `test/test-[functionality].jl` for focused test suites
+- **Descriptive names**: Test names should clearly state what behavior is being verified
+- **Appropriate tags**: Use `:unit`, `:integration`, `:fast` for filtering during development
+- **Logical grouping**: Group related test scenarios within the same file
+
+#### Test Dependencies
+
+- **Add to test environment**: New testing dependencies go in `test/Project.toml`
+- **Export in common setup**: Make dependencies available via `test/common.jl`
+- **Follow existing patterns**: Use the established `[CommonSetup]` pattern for shared setup
+
+#### Test Content Focus
+
+- **Behavior verification**: Test what the code does, not how it does it
+- **Schema compatibility**: Tests should work across different TulipaEnergyModel versions
+- **Full workflow coverage**: Include integration tests that exercise `create_connection()` and complete user workflows
+- **Edge cases**: Test boundary conditions, error scenarios, and data combinations
+- **Self-contained**: Each test should be independent and not rely on execution order
+
+## Testing Strategy
+
+### Development Workflow
+
+**During Development**: Use filtered testing to focus on relevant tests only
+
+```bash
+# Test specific functionality during development
+julia --project=test test/runtests.jl --file test-year-data --tags fast
+julia --project=test test/runtests.jl --tags unit,fast --exclude slow
+```
+
+**Before Commits**: Run full test suite to ensure no regressions
+
+```bash
+julia --project=test test/runtests.jl  # All tests via CLI runner
+julia --project=test -e 'using Pkg; Pkg.test()'  # Full Pkg.test()
+```
+
+### Testing Architecture Patterns
+
+#### TestItems Organization
+
+- **Strategy-per-testitem**: Create focused testitems for each major component/strategy rather than nested loops
+- **Shared testsnippets**: Use `@testsnippet` for per-test setup (runs each time, variables directly accessible)
+- **Shared testmodules**: Use `@testmodule` for one-time expensive operations like data loading/computation (runs once, accessed via module prefix)
+- **Combined approach**: Use both when needed - testmodules for shared expensive operations, testsnippets for per-test variables
+- **Comprehensive validation**: Each testitem should test multiple aspects (files, dependencies, behavior) in one place
+
+#### Pattern Examples
+
+**@testsnippet (per-test setup):**
+
+```julia
+@testsnippet TestData begin
+  tulipa = TulipaData()  # Fresh instance each test
+  add_asset!(tulipa, :test_asset, :producer)
+end
+
+@testitem "Feature works" setup=[CommonSetup, TestData] begin
+  @test haskey(tulipa.graph, :test_asset)
+end
+```
+
+**@testmodule (one-time expensive operations):**
+
+```julia
+@testmodule SharedAssets begin
+  const COMPLEX_TULIPA = create_complex_test_model()  # Create once
+  const REFERENCE_CONNECTION = create_connection(COMPLEX_TULIPA)  # Compute once
+end
+
+@testitem "Validation works" setup=[CommonSetup, SharedAssets] begin
+  @test validate_against(result, SharedAssets.REFERENCE_CONNECTION)
+end
+```
+
+#### CLI Filtering for Development
+
+- **Semantic tags**: Use descriptive tags like `:unit`, `:integration`, `:fast` for easy filtering
+- **Development workflow**: `julia --project=test test/runtests.jl --file specific_file` during development
+- **Add new tags to TAGS_DATA**: Update `test/runtests.jl` when introducing new tag categories
+
+#### Key Development Rule
+
+**When testing new tests, use the CLI approach to filter only the relevant files to test.**
