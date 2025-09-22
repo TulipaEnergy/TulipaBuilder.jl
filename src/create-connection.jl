@@ -1,7 +1,7 @@
 export create_connection
 
 function create_empty_table_from_schema!(connection, table_name, schema, columns)
-    query = "CREATE TABLE $table_name ("
+    query = "CREATE OR REPLACE TABLE $table_name ("
     for (col_name, props) in schema
         if !(col_name in columns)
             continue
@@ -38,7 +38,7 @@ end
 Propagates keys from `asset` to `asset_milestone`, `asset_commission` and `asset_both`, to avoid explicitly attaching a global value.
 """
 function propagate_year_data!(tulipa)
-    # Propagate from asset to asset_milestone
+    # Propagate from asset to asset_milestone and asset_commission
     years = keys(tulipa.years)
     for asset_name in MetaGraphsNext.labels(tulipa.graph)
         asset = tulipa.graph[asset_name]
@@ -56,12 +56,32 @@ function propagate_year_data!(tulipa)
             end
         end
     end
+
+    # Propagate from asset to asset_both
+    # TODO: This is limited to milestone_year=commission_year because otherwise I have no idea what to do
+    for asset_name in MetaGraphsNext.labels(tulipa.graph)
+        asset = tulipa.graph[asset_name]
+
+        relevant_keys = Dict(
+            key => value for (key, value) in asset.basic_data if
+            haskey(TEM.schema["asset_both"], string(key))
+        )
+        for year in years
+            attach_both_years_data!(
+                asset,
+                year,
+                year;
+                on_conflict = :skip,
+                relevant_keys...,
+            )
+        end
+    end
 end
 
 # IDEA: function for_each_asset(f, tulipa)
 
-function create_connection(tulipa::TulipaData)
-    connection = DBInterface.connect(DuckDB.DB)
+function create_connection(tulipa::TulipaData, db = ":memory:")
+    connection = DBInterface.connect(DuckDB.DB, db)
     run_query(s) = DuckDB.query(connection, s)
 
     function collect_sub_keys(d::Dict{<:Any,Dict{Symbol,Any}})
@@ -363,7 +383,7 @@ function create_connection(tulipa::TulipaData)
     # Table profiles
     DuckDB.query(
         connection,
-        "CREATE TABLE profiles (
+        "CREATE OR REPLACE TABLE profiles (
             profile_name VARCHAR,
             year INT64,
             timestep INT64,
@@ -373,7 +393,7 @@ function create_connection(tulipa::TulipaData)
     # Table asset_profiles
     DuckDB.query(
         connection,
-        "CREATE TABLE assets_profiles (
+        "CREATE OR REPLACE TABLE assets_profiles (
             asset VARCHAR,
             commission_year INT64,
             profile_name VARCHAR,
@@ -411,7 +431,7 @@ function create_connection(tulipa::TulipaData)
 
     DuckDB.query(
         connection,
-        "CREATE TABLE year_data (
+        "CREATE OR REPLACE TABLE year_data (
             year INT64,
             length INT64,
             is_milestone BOOLEAN,
