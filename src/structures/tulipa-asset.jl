@@ -1,5 +1,5 @@
-mutable struct TulipaAsset
-    name::Symbol
+mutable struct TulipaAsset{KeyType}
+    name::KeyType
     type::AssetType
 
     basic_data::Dict{Symbol,Any}
@@ -9,10 +9,9 @@ mutable struct TulipaAsset
 
     profiles::Dict{Tuple{ProfileType,Int},Vector{Float64}}
 
-    function TulipaAsset(asset_name::Union{Symbol,String}, type::Symbol; kwargs...)
-        asset_name_symbol = Symbol(asset_name)
-        return new(
-            asset_name_symbol,
+    function TulipaAsset(asset_name::KeyType, type::AssetType; kwargs...) where {KeyType}
+        return new{KeyType}(
+            asset_name,
             type,
             Dict{Symbol,Any}(kwargs...),
             PerYear{Dict{Symbol,Any}}(),
@@ -55,7 +54,6 @@ function attach_milestone_data!(
     on_conflict = :overwrite,
     kwargs...,
 )
-    @info asset.name, year, kwargs
     # If the year has not been set, then it is not possible to have conflicts
     if !haskey(asset.milestone_year_data, year)
         asset.milestone_year_data[year] = Dict{Symbol,Any}(kwargs...)
@@ -63,7 +61,7 @@ function attach_milestone_data!(
     end
 
     for (k, v) in kwargs
-        # Either the key already exists or it is allowed to s
+        # Either the key already exists or it is allowed to be overwritten
         if !haskey(asset.milestone_year_data[year], k) || on_conflict == :overwrite
             asset.milestone_year_data[year][k] = v
         elseif on_conflict == :error

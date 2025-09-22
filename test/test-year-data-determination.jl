@@ -1,6 +1,6 @@
 @testitem "Basic profile attachment creates year_data automatically" tags = [:unit, :fast] setup =
     [CommonSetup] begin
-    tulipa = TulipaData()
+    tulipa = TulipaData{Symbol}()
 
     # Add a basic asset
     add_asset!(tulipa, :solar, :producer)
@@ -25,7 +25,7 @@ end
 
 @testitem "Commission data attachment creates year_data automatically" tags = [:unit, :fast] setup =
     [CommonSetup] begin
-    tulipa = TulipaData()
+    tulipa = TulipaData{Symbol}()
 
     # Add a basic asset
     add_asset!(tulipa, :ccgt, :producer)
@@ -49,7 +49,7 @@ end
 
 @testitem "Milestone data attachment creates year_data automatically" tags = [:unit, :fast] setup =
     [CommonSetup] begin
-    tulipa = TulipaData()
+    tulipa = TulipaData{Symbol}()
 
     # Add a basic asset
     add_asset!(tulipa, :wind, :producer)
@@ -74,7 +74,7 @@ end
 
 @testitem "Both_years data attachment creates year_data automatically" tags = [:unit, :fast] setup =
     [CommonSetup] begin
-    tulipa = TulipaData()
+    tulipa = TulipaData{Symbol}()
 
     # Add a basic asset
     add_asset!(tulipa, :hydro, :producer)
@@ -104,7 +104,7 @@ end
 
 @testitem "Mixed data sources for same year combine properly" tags = [:unit, :fast] setup =
     [CommonSetup] begin
-    tulipa = TulipaData()
+    tulipa = TulipaData{Symbol}()
 
     # Add a basic asset
     add_asset!(tulipa, :nuclear, :producer)
@@ -130,7 +130,7 @@ end
 
 @testitem "Flow data attachment creates year_data automatically" tags = [:unit, :fast] setup =
     [CommonSetup] begin
-    tulipa = TulipaData()
+    tulipa = TulipaData{Symbol}()
 
     # Add assets and flow
     add_asset!(tulipa, :gas, :producer)
@@ -167,7 +167,7 @@ end
     # Reference: README.md "Magic transformations" section
     # Issue: https://github.com/TulipaEnergyModel/TulipaBuilder.jl/issues/3
 
-    tulipa = TulipaData()
+    tulipa = TulipaData{Symbol}()
 
     # Test asset milestone data magic transformation
     add_asset!(tulipa, :test_producer, :producer)
@@ -208,7 +208,7 @@ end
     # Since profiles always mark years as milestone, all functional years become milestone years
     # Commission-only years exist but cannot be used in create_connection() without profiles
 
-    tulipa = TulipaData()
+    tulipa = TulipaData{Symbol}()
 
     add_asset!(tulipa, :solar, :producer, investment_method = "simple")
     add_asset!(tulipa, :demand, :consumer)

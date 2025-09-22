@@ -1,20 +1,20 @@
 export TulipaData
 
-mutable struct TulipaData
+mutable struct TulipaData{KeyType}
     graph::MetaGraphsNext.MetaGraph
     validated::Bool
 
     years::PerYear{Dict{Symbol,Any}}
 
-    function TulipaData()
+    function TulipaData{KeyType}() where {KeyType}
         graph = MetaGraphsNext.MetaGraph(
             Graphs.DiGraph(),
-            label_type = Symbol,
+            label_type = KeyType,
             vertex_data_type = TulipaAsset,
             edge_data_type = TulipaFlow,
         )
 
-        return new(graph, false, Dict())
+        return new{KeyType}(graph, false, Dict())
     end
 end
 

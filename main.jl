@@ -5,7 +5,7 @@ using TulipaEnergyModel: TulipaEnergyModel as TEM
 using TulipaBuilder: TulipaBuilder as TB
 using XLSX
 
-tulipa = TB.TulipaData()
+tulipa = TB.TulipaData{Symbol}()
 
 ### assets
 # Asset: CCGT

@@ -45,8 +45,9 @@ repos:
     rev: v2.1.2
     hooks:
       - id: julia-formatter
-  - repo: https://github.com/JuliaTesting/ExplicitImports.jl
-    rev: v1.13.1
-    hooks:
-      - id: explicit-imports
-        args: ['--checklist', 'no_implicit_imports,all_qualified_accesses_via_owners,no_self_qualified_accesses']
+  # Too slow to be using in prototyping
+  # - repo: https://github.com/JuliaTesting/ExplicitImports.jl
+  #   rev: v1.13.1
+  #   hooks:
+  #     - id: explicit-imports
+  #       args: ['--checklist', 'no_implicit_imports,all_qualified_accesses_via_owners,no_self_qualified_accesses']

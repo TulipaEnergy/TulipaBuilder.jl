@@ -78,7 +78,7 @@ julia --project=docs docs/make.jl
 
 The main workflow creates a graph-based model and converts it to TulipaEnergyModel's database format:
 
-1. **Initialize**: Create a `TulipaData()` instance
+1. **Initialize**: Create a `TulipaData{Symbol}()` instance
 2. **Build Graph**:
    - Add assets using `add_asset!(tulipa, name, type, ...)`
    - Add flows between assets using `add_flow!(tulipa, from_asset, to_asset)`
@@ -204,7 +204,7 @@ julia --project=test -e 'using Pkg; Pkg.test()'  # Full Pkg.test()
 
 ```julia
 @testsnippet TestData begin
-  tulipa = TulipaData()  # Fresh instance each test
+  tulipa = TulipaData{Symbol}()  # Fresh instance each test
   add_asset!(tulipa, :test_asset, :producer)
 end
 

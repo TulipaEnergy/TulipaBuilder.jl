@@ -1,15 +1,15 @@
 
-mutable struct TulipaFlow
-    from::Symbol
-    to::Symbol
+mutable struct TulipaFlow{KeyType}
+    from::KeyType
+    to::KeyType
 
     basic_data::Dict{Symbol,Any}
     commission_year_data::PerYear{Dict{Symbol,Any}}
     milestone_year_data::PerYear{Dict{Symbol,Any}}
     both_years_data::PerYears{Dict{Symbol,Any}}
 
-    function TulipaFlow(from::Symbol, to::Symbol; kwargs...)
-        return new(
+    function TulipaFlow(from::KeyType, to::KeyType; kwargs...) where {KeyType}
+        return new{KeyType}(
             from,
             to,
             Dict{Symbol,Any}(kwargs...),
