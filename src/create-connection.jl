@@ -499,9 +499,5 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         ",
     )
 
-    # TODO: Move this out of here
-    TC.dummy_cluster!(connection)
-    TEM.populate_with_defaults!(connection)
-
     return connection
 end
