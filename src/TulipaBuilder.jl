@@ -8,7 +8,8 @@ export TulipaAsset,
     attach_profile!,
     attach_commission_data!,
     attach_milestone_data!,
-    attach_both_years_data!
+    attach_both_years_data!,
+    create_case_study_csv_folder
 
 using DataFrames: DataFrames, DataFrame
 using DuckDB: DuckDB, DBInterface
@@ -34,5 +35,8 @@ include("structures/tulipa-data.jl")
 
 # conversion to TulipaEnergyModel format
 include("create-connection.jl")
+
+# output functions
+include("output.jl")
 
 end

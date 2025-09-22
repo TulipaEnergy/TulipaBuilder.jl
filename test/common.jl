@@ -1,4 +1,5 @@
 @testsnippet CommonSetup begin
+    using CSV: CSV
     using DataFrames: DataFrame
     using DuckDB: DuckDB
     using JuMP: JuMP
