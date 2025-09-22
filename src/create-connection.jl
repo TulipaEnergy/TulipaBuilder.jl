@@ -482,6 +482,17 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
     end
 
     # Complement the asset_both tables with rows from asset_milestone
+    ## Only check for 'compact' if the investment_method column exists
+    has_investment_method_column = any(
+        haskey(tulipa.graph[asset_name].basic_data, :investment_method) for
+        asset_name in MetaGraphsNext.labels(tulipa.graph)
+    )
+    where_investment_method = if has_investment_method_column
+        "WHERE asset.investment_method != 'compact'"
+    else
+        ""
+    end
+    ## SQL
     DuckDB.query(
         connection,
         "INSERT INTO asset_both BY NAME (
@@ -494,7 +505,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             ANTI JOIN asset_both
                 ON asset_both.asset = asset_milestone.asset
                 AND asset_both.milestone_year = asset_milestone.milestone_year
-            WHERE asset.investment_method != 'compact'
+            $where_investment_method
         )
         ",
     )
