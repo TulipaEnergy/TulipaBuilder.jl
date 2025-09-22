@@ -78,10 +78,28 @@ function attach_both_years_data!(
     asset::TulipaAsset,
     commission_year,
     milestone_year;
+    on_conflict = :overwrite,
     kwargs...,
 )
     @assert milestone_year ≥ commission_year
-    asset.both_years_data[(commission_year, milestone_year)] = Dict{Symbol,Any}(kwargs...)
+    year_key = (commission_year, milestone_year)
+    if !haskey(asset.both_years_data, year_key)
+        asset.both_years_data[year_key] = Dict{Symbol,Any}(kwargs...)
+        return asset
+    end
+
+    for (k, v) in kwargs
+        # Either the key already exists or it is allowed to be overwritten
+        if !haskey(asset.both_years_data[year_key], k) || on_conflict == :overwrite
+            asset.both_years_data[year_key][k] = v
+        elseif on_conflict == :error
+            throw(
+                ExistingKeyError(
+                    "Key $k has already been attached for asset=$(asset.name), milestone_year=$milestone_year, commission_year=$commission_year",
+                ),
+            )
+        end # on_conflict = :skip
+    end
 end
 
 function attach_profile!(
