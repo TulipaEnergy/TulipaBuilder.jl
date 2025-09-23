@@ -83,7 +83,7 @@
 
     function test_that_both_have_the_same_data(data, manual_data) # should ignore types
         for (key, table) in data
-            @testset "$key-$col" for col in names(table)
+            for col in names(table)
                 data_values = table[:, col]
                 manual_data_values = manual_data[key][:, col]
                 @test data_values == manual_data_values
@@ -142,7 +142,7 @@ end
     push!(manual_data[:asset_commission], ("ccgt", 2030, 3.0))
     manual_data[:asset_milestone].investable = Bool[] # investable is lost because there is
     push!(manual_data[:asset_milestone], ("ccgt", 2030, true))
-    push!(manual_data[:asset_both], ("ccgt", 2030, 2030)) # ERROR: Shouldn't be here
+    push!(manual_data[:asset_both], ("ccgt", 2030, 2030)) # ERROR: Shouldn't be here (I think)
     push!(
         manual_data[:assets_profiles],
         ("ccgt", 2030, "ccgt-availability-2030", "availability"),
@@ -159,7 +159,7 @@ end
     ## Stage 3 - another asset and a flow
 
     add_asset!(tulipa, "Hub", :hub)
-    add_flow!(tulipa, "ccgt", "Hub")
+    add_flow!(tulipa, "ccgt", "Hub", operational_cost = 4.0)
 
     push!(manual_data[:asset], ("Hub", "hub", 0.0, "none"))
     push!(manual_data[:asset_commission], ("Hub", 2030, 0.0))
@@ -167,7 +167,9 @@ end
     push!(manual_data[:asset_both], ("Hub", 2030, 2030))
     push!(manual_data[:flow], ("ccgt", "Hub"))
     push!(manual_data[:flow_commission], ("ccgt", "Hub", 2030))
-    push!(manual_data[:flow_milestone], ("ccgt", "Hub", 2030))
+    manual_data[:flow_milestone].operational_cost = Float64[]
+    push!(manual_data[:flow_milestone], ("ccgt", "Hub", 2030, 4.0))
+    # push!(manual_data[:flow_both], ("ccgt", "Hub", 2030, 2030)) # ERROR: Should this be here?
 
     data = create_and_get_data(tulipa)
     test_that_tables_are_equivalent(data, manual_data)

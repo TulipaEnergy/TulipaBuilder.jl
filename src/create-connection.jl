@@ -76,6 +76,38 @@ function propagate_year_data!(tulipa)
             )
         end
     end
+
+    # Propagate from flow to flow_commission and flow_milestone
+    for (from_asset_name, to_asset_name) in MetaGraphsNext.edge_labels(tulipa.graph)
+        flow = tulipa.graph[from_asset_name, to_asset_name]
+
+        for (table_name, attach!) in (
+            ("flow_milestone", attach_milestone_data!),
+            ("flow_commission", attach_commission_data!),
+        )
+            relevant_keys = Dict(
+                key => value for (key, value) in flow.basic_data if
+                haskey(TEM.schema[table_name], string(key))
+            )
+            for year in years
+                attach!(flow, year; on_conflict = :skip, relevant_keys...)
+            end
+        end
+    end
+
+    # Propagate from flow to flow_both
+    # TODO: Not all flows are added to flow_both, so we need to filter. Skipping for now
+    # for (from_asset_name, to_asset_name) in MetaGraphsNext.edge_labels(tulipa.graph)
+    #     flow = tulipa.graph[from_asset_name, to_asset_name]
+
+    #     relevant_keys = Dict(
+    #         key => value for (key, value) in flow.basic_data if
+    #         haskey(TEM.schema["flow_both"], string(key))
+    #     )
+    #     for year in years
+    #         attach_both_years_data!(flow, year, year; on_conflict = :skip, relevant_keys...)
+    #     end
+    # end
 end
 
 # IDEA: function for_each_asset(f, tulipa)
