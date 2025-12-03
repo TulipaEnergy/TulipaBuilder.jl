@@ -1,0 +1,7 @@
+Generators:
+  name: gen_9
+  id: G09
+  marginal_cost_quadratic: 0
+  marginal_cost_linear: 10.0
+  installed_capacity: 5
+  availability_factor: gen_9

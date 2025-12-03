@@ -1,0 +1,8 @@
+satellite,exclusive_group_id,profile_block_id,timestamp,price,quantity
+Consumer1,1,1,2024-01-01 00:00:00,20,8
+Consumer1,2,1,2024-01-01 00:00:00,15,5
+Consumer1,3,1,2024-01-01 00:00:00,7,5
+Consumer2,1,1,2024-01-01 00:00:00,18,7
+Consumer2,2,1,2024-01-01 00:00:00,16,4
+Consumer2,3,1,2024-01-01 00:00:00,11,4
+Consumer2,4,1,2024-01-01 00:00:00,3,3

@@ -1,0 +1,7 @@
+Generators:
+  name: gen_4
+  id: G04
+  marginal_cost_quadratic: 0
+  marginal_cost_linear: 4.5
+  installed_capacity: 8
+  availability_factor: gen_4
