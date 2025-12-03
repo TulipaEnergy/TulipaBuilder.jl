@@ -1,0 +1,7 @@
+Generators:
+  name: gen_5
+  id: G05
+  marginal_cost_quadratic: 0
+  marginal_cost_linear: 5.0
+  installed_capacity: 8
+  availability_factor: gen_5

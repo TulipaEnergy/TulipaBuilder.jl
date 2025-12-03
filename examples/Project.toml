@@ -1,0 +1,10 @@
+[deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+TulipaBuilder = "05fe4dc7-9a58-53a4-b912-b5673d74e816"
+TulipaClustering = "314fac8b-c762-4aa3-9d12-851379729163"
+TulipaEnergyModel = "5d7bd171-d18e-45a5-9111-f1f11ac5d04d"
+YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
+
+[sources]
+TulipaBuilder = {path = ".."}

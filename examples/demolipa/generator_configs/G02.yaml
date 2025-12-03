@@ -1,0 +1,7 @@
+Generators:
+  name: gen_2
+  id: G02
+  marginal_cost_quadratic: 0
+  marginal_cost_linear: 3
+  installed_capacity: 12
+  availability_factor: gen_2

@@ -1,0 +1,8 @@
+Generators:
+  name: gen_1
+  id: G01
+  marginal_cost_quadratic: 0
+  marginal_cost_linear: 1
+  installed_capacity: 5
+  # yamllint disable-line rule:line-length
+  availability_factor: gen_1 # Column name in to be picked as availability profile from the timeseries data.
