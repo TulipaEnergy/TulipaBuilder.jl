@@ -15,7 +15,6 @@ using DataFrames: DataFrames, DataFrame
 using DuckDB: DuckDB, DBInterface
 using Graphs: Graphs
 using MetaGraphsNext: MetaGraphsNext
-using TulipaClustering: TulipaClustering as TC
 using TulipaEnergyModel: TulipaEnergyModel as TEM
 using TulipaIO: TulipaIO as TIO
 
