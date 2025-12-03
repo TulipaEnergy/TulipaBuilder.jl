@@ -1,0 +1,7 @@
+[deps]
+TulipaBuilder = "05fe4dc7-9a58-53a4-b912-b5673d74e816"
+TulipaClustering = "314fac8b-c762-4aa3-9d12-851379729163"
+TulipaEnergyModel = "5d7bd171-d18e-45a5-9111-f1f11ac5d04d"
+
+[sources]
+TulipaBuilder = {path = ".."}
