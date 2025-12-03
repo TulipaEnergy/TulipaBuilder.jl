@@ -1,7 +1,7 @@
 name = "TulipaBuilder"
 uuid = "05fe4dc7-9a58-53a4-b912-b5673d74e816"
-authors = ["Abel Soares Siqueira"]
 version = "0.1.0"
+authors = ["Abel Soares Siqueira"]
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
@@ -19,7 +19,7 @@ DuckDB = "1.3.1"
 Graphs = "1.13.0"
 MetaGraphsNext = "0.7.3"
 TulipaClustering = "0.4.1"
-TulipaEnergyModel = "0.17"
+TulipaEnergyModel = "0.17, 0.19"
 TulipaIO = "0.5.0"
 XLSX = "0.10.4"
 julia = "1.10"
