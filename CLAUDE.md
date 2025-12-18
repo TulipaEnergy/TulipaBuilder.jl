@@ -140,20 +140,29 @@ The `create_connection()` function is the bridge between TulipaBuilder's graph r
 
 ## Important Dependencies
 
-- **TulipaEnergyModel**: The solver backend (aliased as TulipaEnergyModel) - provides the schema and solves the optimization model
+- **TulipaEnergyModel**: The solver backend - provides the schema and solves the optimization model
 - **MetaGraphsNext**: Graph data structure for representing the energy system as assets (vertices) and flows (edges)
 - **DataFrames**: Data manipulation for profiles and results
 - **DuckDB**: In-memory database for the final data format expected by TulipaEnergyModel
-- **TulipaIO**: I/O operations and SQL formatting utilities (aliased as TIO)
-- **TulipaClustering**: Clustering operations for time aggregation (currently uses dummy clustering)
+- **TulipaIO**: I/O operations and SQL formatting utilities
+- **Graphs**: Base graph functionality
 
 ## File Structure
 
+### Core Source Files
+
 - `src/TulipaBuilder.jl`: Main module with exports
 - `src/structures/`: Core data structures (TulipaAsset, TulipaFlow, TulipaData)
-- `src/create-connection.jl`: Conversion to TulipaEnergyModel format
-- `examples/`: Examples folder showing typical usage
-- `test/runtests.jl`: Main test suite demonstrating the API
+- `src/create-connection.jl`: Conversion to TulipaEnergyModel format (includes `propagate_year_data!()`)
+- `src/output.jl`: CSV export functionality (`create_case_study_csv_folder`)
+- `src/utils.jl`: Utility functions
+
+### Examples and Tests
+
+- `examples/tiny.jl`: Minimal working example recreating TulipaEnergyModel's Tiny dataset
+- `examples/demolipa.jl`: Larger example with YAML configuration loading
+- `test/runtests.jl`: Test runner with CLI filtering support
+- `test/test-*.jl`: Focused test suites for different functionality
 
 ## Development Guidelines
 
