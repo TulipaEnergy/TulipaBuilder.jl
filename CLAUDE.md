@@ -50,10 +50,10 @@ The test runner supports filtering by:
 - `--list-tags`: Show available tags
 - `--help`: Show usage help
 
-### Running the main example
+### Running the examples
 
 ```bash
-julia --project=. main.jl
+julia --project=examples examples/FILE.jl
 ```
 
 ### Package development
@@ -113,7 +113,7 @@ The `create_connection()` function is the bridge between TulipaBuilder's graph r
 - `src/TulipaBuilder.jl`: Main module with exports
 - `src/structures/`: Core data structures (TulipaAsset, TulipaFlow, TulipaData)
 - `src/create-connection.jl`: Conversion to TulipaEnergyModel format
-- `main.jl`: Working example showing typical usage
+- `examples/`: Examples folder showing typical usage
 - `test/runtests.jl`: Main test suite demonstrating the API
 
 ## Development Guidelines
