@@ -78,17 +78,56 @@ julia --project=docs docs/make.jl
 
 The main workflow creates a graph-based model and converts it to TulipaEnergyModel's database format:
 
+### Simple Workflow (Most Common)
+
 1. **Initialize**: Create a `TulipaData{Symbol}()` instance
 2. **Build Graph**:
-   - Add assets using `add_asset!(tulipa, name, type, ...)`
-   - Add flows between assets using `add_flow!(tulipa, from_asset, to_asset)`
-3. **Attach Time-Specific Data**:
-   - `attach_milestone_data!()` for milestone years (investment decisions)
-   - `attach_commission_data!()` for commission years (operational data)
-   - `attach_both_years_data!()` for data spanning both commission and milestone years
-4. **Add Profiles**: Use `attach_profile!(tulipa, asset, profile_type, year, data)` for time-series data
-5. **Convert to TulipaEnergyModel Format**: `create_connection(tulipa)` converts the graph to DuckDB tables matching TulipaEnergyModel's expected schema
+   - Add assets using `add_asset!(tulipa, name, type, property=value, ...)` - properties automatically apply to all years
+   - Add flows using `add_flow!(tulipa, from_asset, to_asset, property=value, ...)` - properties automatically apply to all years
+3. **Add Profiles**: Use `attach_profile!(tulipa, asset, profile_type, year, data)` for time-series data
+   - **REQUIRED**: At least one profile per year for optimization to work
+   - Profiles automatically mark years as milestone years and set year length
+4. **Convert to Database**: `create_connection(tulipa)` converts the graph to DuckDB format
+   - Automatically propagates asset/flow properties to all year-specific tables
+   - Automatically fills missing (asset, year) and (flow, year) combinations
+5. **Export (Optional)**: `create_case_study_csv_folder(connection, folder_path)` exports to CSV files
 6. **Solve**: Run `TulipaEnergyModel.run_scenario(connection)` on the resulting connection
+
+### Advanced Workflow (Year-Specific Overrides)
+
+Only needed when you want different property values for specific years:
+
+- `attach_milestone_data!(tulipa, asset, year, property=value)` - Override properties for a milestone year
+- `attach_commission_data!(tulipa, asset, year, property=value)` - Override properties for a commission year
+- `attach_both_years_data!(tulipa, asset, milestone_year, commission_year, property=value)` - Set investment-specific data
+
+These override the automatically propagated values from `add_asset!()` or `add_flow!()`.
+
+### Automatic Transformations ("Magic")
+
+TulipaBuilder performs several automatic transformations to simplify the user experience:
+
+1. **Year Tracking**: Years are automatically created when you attach profiles or year-specific data
+   - `attach_profile!()` marks the year as a milestone year and sets year length
+   - `attach_milestone_data!()` marks the year as a milestone year
+
+2. **Property Propagation**: Properties passed to `add_asset!()` and `add_flow!()` automatically propagate to all year-specific tables
+   - Called via `propagate_year_data!()` inside `create_connection()`
+   - Uses schema validation to only propagate valid columns per table
+   - Respects manually attached year-specific data (doesn't overwrite)
+
+3. **Missing Year Combinations**: Automatically creates entries for all (asset, year) and (flow, year) combinations
+   - Milestone tables get entries only for milestone years
+   - Commission tables get entries for all years
+   - Uses schema defaults for unspecified columns
+
+4. **Asset Both Table**: Automatically populates `asset_both` table from `asset_milestone` for non-compact methods
+   - Sets commission_year = milestone_year (same year)
+   - Ensures data structure consistency
+
+5. **Schema-Driven Tables**: All tables created dynamically from TulipaEnergyModel.schema
+   - Only includes columns that exist in the current TEM version
+   - Applies schema defaults automatically
 
 ### Key Conversion Process (create_connection)
 
@@ -127,6 +166,8 @@ The `create_connection()` function is the bridge between TulipaBuilder's graph r
 1. **Never hardcode column names** except for the core required ones (asset, type, from_asset, to_asset, commission_year, milestone_year)
 2. **Always check schema existence** with `haskey(TulipaEnergyModel.schema[table_name], key)` before using columns
 3. **Let TulipaEnergyModel.schema define** column types and defaults dynamically
+4. **Propagation is automatic**: Properties in `add_asset!()` and `add_flow!()` automatically propagate to year-specific tables via `propagate_year_data!()`
+5. **Year-specific overrides**: Use `attach_*_data!()` functions only when you need different values for specific years
 
 ### Common Data Patterns
 
@@ -142,7 +183,15 @@ Key properties are schema-driven but commonly include:
 - `investable`: Boolean for milestone years
 - `investment_cost`: Cost for commission years
 
-All assets require proper milestone and commission data attachment for valid models. The exact required fields depend on the TulipaEnergyModel version being used.
+The exact required fields depend on the TulipaEnergyModel version being used. The automatic propagation system handles most cases without explicit year-specific data attachment - properties passed to `add_asset!()` and `add_flow!()` are automatically propagated to all years.
+
+**Year Requirements for Well-Defined Models**:
+
+- At least one year must be defined (future versions may include a default for simpler usage)
+- Years are automatically created when calling functions with a `year` parameter (e.g., `attach_profile!()`, `attach_milestone_data!()`)
+- The year length must be defined, either:
+  - Implicitly by attaching a profile (uses the profile's length)
+  - Explicitly using `add_or_update_year!(tulipa, year, length=value)`
 
 ### Testing Guidelines
 
