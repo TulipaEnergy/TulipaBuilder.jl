@@ -145,7 +145,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         for (key, value) in asset.basic_data
             query_row = _get_select_query_row(key, value, "asset")
             if query_row == ""
-                @warn "Ignoring column $key from asset '$asset_name'"
+                @debug "Ignoring column $key from asset '$asset_name'"
                 continue
             end
             query *= query_row
@@ -181,7 +181,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             for (key, value) in values
                 query_row = _get_select_query_row(key, value, "asset_both")
                 if query_row == ""
-                    @warn "Ignoring column $key from asset '$asset_name' (both years)"
+                    @debug "Ignoring column $key from asset '$asset_name' (both years)"
                     continue
                 end
                 query *= query_row
@@ -216,7 +216,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             for (key, value) in values
                 query_row = _get_select_query_row(key, value, "asset_commission")
                 if query_row == ""
-                    @warn "Ignoring column $key from asset '$asset_name' (commission year)"
+                    @debug "Ignoring column $key from asset '$asset_name' (commission year)"
                     continue
                 end
                 query *= query_row
@@ -236,7 +236,6 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             key in collect_sub_keys(tulipa.graph[asset_name].milestone_year_data)
         ])
     ]
-    @warn columns
     create_empty_table_from_schema!(
         connection,
         "asset_milestone",
@@ -253,7 +252,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             for (key, value) in values
                 query_row = _get_select_query_row(key, value, "asset_milestone")
                 if query_row == ""
-                    @warn "Ignoring column $key from asset '$asset_name' (milestone year)"
+                    @debug "Ignoring column $key from asset '$asset_name' (milestone year)"
                     continue
                 end
                 query *= query_row
@@ -284,7 +283,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         for (key, value) in flow.basic_data
             query_row = _get_select_query_row(key, value, "flow")
             if query_row == ""
-                @warn "Ignoring column $key from flow ('$from_asset','$to_asset')"
+                @debug "Ignoring column $key from flow ('$from_asset','$to_asset')"
                 continue
             end
             query *= query_row
@@ -324,7 +323,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             for (key, value) in values
                 query_row = _get_select_query_row(key, value, "flow_both")
                 if query_row == ""
-                    @warn "Ignoring column $key from flow ('$from_asset','$to_asset') (both years)"
+                    @debug "Ignoring column $key from flow ('$from_asset','$to_asset') (both years)"
                     continue
                 end
                 query *= query_row
@@ -363,7 +362,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             for (key, value) in values
                 query_row = _get_select_query_row(key, value, "flow_commission")
                 if query_row == ""
-                    @warn "Ignoring column $key from flow ('$from_asset','$to_asset') (commission years)"
+                    @debug "Ignoring column $key from flow ('$from_asset','$to_asset') (commission years)"
                     continue
                 end
                 query *= query_row
@@ -402,7 +401,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             for (key, value) in values
                 query_row = _get_select_query_row(key, value, "flow_milestone")
                 if query_row == ""
-                    @warn "Ignoring column $key from flow ('$from_asset','$to_asset') (milestone years)"
+                    @debug "Ignoring column $key from flow ('$from_asset','$to_asset') (milestone years)"
                     continue
                 end
                 query *= query_row
