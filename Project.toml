@@ -3,6 +3,9 @@ uuid = "05fe4dc7-9a58-53a4-b912-b5673d74e816"
 version = "0.1.0"
 authors = ["Abel Soares Siqueira"]
 
+[workspace]
+projects = ["test", "docs", "examples"]
+
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DuckDB = "d2f5444f-75bc-4fdf-ac35-56f514c445e1"

@@ -9,3 +9,6 @@ TulipaBuilder = "05fe4dc7-9a58-53a4-b912-b5673d74e816"
 
 [compat]
 Documenter = "1"
+
+[sources]
+TulipaBuilder = { path = ".." }
