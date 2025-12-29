@@ -8,12 +8,11 @@ repos:
         language: fail
         files: "\\.rej$"
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-json
       - id: check-toml
       - id: check-yaml
-      - id: end-of-file-fixer
       - id: file-contents-sorter
         files: .JuliaFormatter.toml
         args: [--unique]
@@ -23,31 +22,26 @@ repos:
       - id: pretty-format-json
         args: [--autofix, --indent=2]
       - id: trailing-whitespace
+      - id: end-of-file-fixer
       - id: check-merge-conflict
         args: [--assume-in-merge]
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.45.0
+    rev: v0.47.0
     hooks:
       - id: markdownlint-fix
-  # - repo: https://github.com/sql-formatter-org/sql-formatter
-  #   rev: v15.4.11
-  #   hooks:
-  #     - id: sql-formatter
   - repo: https://github.com/citation-file-format/cffconvert
     rev: 054bda51dbe278b3e86f27c890e3f3ac877d616c
     hooks:
       - id: validate-cff
+  - repo: https://github.com/google/yamlfmt
+    rev: v0.20.0
+    hooks:
+      - id: yamlfmt
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.37.1
     hooks:
       - id: yamllint
   - repo: https://github.com/domluna/JuliaFormatter.jl
-    rev: v2.1.2
+    rev: v2.2.0
     hooks:
       - id: julia-formatter
-  # Too slow to be using in prototyping
-  # - repo: https://github.com/JuliaTesting/ExplicitImports.jl
-  #   rev: v1.13.1
-  #   hooks:
-  #     - id: explicit-imports
-  #       args: ['--checklist', 'no_implicit_imports,all_qualified_accesses_via_owners,no_self_qualified_accesses']

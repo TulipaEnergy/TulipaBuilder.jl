@@ -1,6 +1,4 @@
 #!/usr/bin/env julia
-# From BestieTemplate.jl (under development)
-# Should be updated after BestieTemplate has a new release including TestingStrategy
 
 using Pkg
 using TestItemRunner
@@ -43,8 +41,7 @@ function _list_available_tags()
     return
 end
 
-const TAGS_DATA = Dict(
-    # TODO: Make sure every test has some of these tags
+const TAGS_DATA = Dict( # The tags below are a suggestion
     # Test Type (What kind of test?)
     :integration => "End-to-end tests with real datasets and full workflows",
     :unit => "Single component or function tests",
@@ -54,9 +51,7 @@ const TAGS_DATA = Dict(
     :fast => "Quick tests suitable for frequent execution",
     :slow => "Resource-intensive tests requiring significant time or memory",
 
-    # Feature Areas (What functionality is being tested?)
-
-    # Test Characteristics (What capabilities/dependencies are required?)
+    # Features (What features are being tested?)
 )
 
 function main()
