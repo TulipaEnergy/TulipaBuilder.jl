@@ -1,3 +1,5 @@
+export create_case_study_csv_folder
+
 function create_case_study_csv_folder(connection, case_study_folder; overwrite = true)
     # Check if folder exists and handle overwrite logic
     if isdir(case_study_folder)
