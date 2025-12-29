@@ -1,3 +1,8 @@
+
+"""
+Internal structure to hold all information of a given asset.
+It's used internally inside the graph that's inside the TulipaData object.
+"""
 mutable struct TulipaAsset{KeyType}
     name::KeyType
     type::AssetType
@@ -9,6 +14,12 @@ mutable struct TulipaAsset{KeyType}
 
     profiles::Dict{Tuple{ProfileType,Int},Vector{Float64}}
 
+    """
+        TulipaAsset(asset_name, type; kwargs...)
+
+    Create a new `TulipaAsset` with given name `asset_name`, type `type`, and
+    further values provided by the keyword arguments.
+    """
     function TulipaAsset(asset_name::KeyType, type::AssetType; kwargs...) where {KeyType}
         return new{KeyType}(
             asset_name,
@@ -22,12 +33,25 @@ mutable struct TulipaAsset{KeyType}
     end
 end
 
+"""
+    attach_commission_data!(asset::TulipaAsset, year; kwargs...)
+
+Internal version of `attach_commission_data!` acting directly on a `TulipaAsset`
+object.
+"""
 function attach_commission_data!(
     asset::TulipaAsset,
     year;
     on_conflict = :overwrite,
     kwargs...,
 )
+    if !(on_conflict in (:error, :overwrite, :skip))
+        throw(
+            ArgumentError(
+                "`on_conflict` must be one of `:error`, `:overwrite`, or `:skip`",
+            ),
+        )
+    end
     # If the year has not been set, then it is not possible to have conflicts
     if !haskey(asset.commission_year_data, year)
         asset.commission_year_data[year] = Dict{Symbol,Any}(kwargs...)
@@ -48,12 +72,25 @@ function attach_commission_data!(
     end
 end
 
+"""
+    attach_milestone_data!(asset::TulipaAsset, year; kwargs...)
+
+Internal version of `attach_milestone_data!` acting directly on a `TulipaAsset`
+object.
+"""
 function attach_milestone_data!(
     asset::TulipaAsset,
     year;
     on_conflict = :overwrite,
     kwargs...,
 )
+    if !(on_conflict in (:error, :overwrite, :skip))
+        throw(
+            ArgumentError(
+                "`on_conflict` must be one of `:error`, `:overwrite`, or `:skip`",
+            ),
+        )
+    end
     # If the year has not been set, then it is not possible to have conflicts
     if !haskey(asset.milestone_year_data, year)
         asset.milestone_year_data[year] = Dict{Symbol,Any}(kwargs...)
@@ -74,6 +111,12 @@ function attach_milestone_data!(
     end
 end
 
+"""
+    attach_both_years_data!(asset::TulipaAsset, commission_year, milestone_year; kwargs...)
+
+Internal version of `attach_both_years_data!` acting directly on a `TulipaAsset`
+object.
+"""
 function attach_both_years_data!(
     asset::TulipaAsset,
     commission_year,
@@ -81,6 +124,13 @@ function attach_both_years_data!(
     on_conflict = :overwrite,
     kwargs...,
 )
+    if !(on_conflict in (:error, :overwrite, :skip))
+        throw(
+            ArgumentError(
+                "`on_conflict` must be one of `:error`, `:overwrite`, or `:skip`",
+            ),
+        )
+    end
     @assert milestone_year ≥ commission_year
     year_key = (commission_year, milestone_year)
     if !haskey(asset.both_years_data, year_key)
@@ -102,6 +152,11 @@ function attach_both_years_data!(
     end
 end
 
+"""
+    attach_profile!(asset::TulipaAsset, profile_type, year, profile_value)
+
+Internal version of `attach_profile!` acting directly on a `TulipaAsset` object.
+"""
 function attach_profile!(
     asset::TulipaAsset,
     profile_type::ProfileType,

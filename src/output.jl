@@ -1,3 +1,14 @@
+export create_case_study_csv_folder
+
+"""
+    create_case_study_csv_folder(connection, case_study_folder; overwrite = true)
+
+Creates the CSV files that correspond to the Tulipa input tables in
+`connection` and saves them in the `case_study_folder`.
+If `overwrite`, then the files are overwritten if they exist.
+
+The tables that are exported are the ones that are defined in `TulipaEnergyModel.schema`, and the `profiles` table.
+"""
 function create_case_study_csv_folder(connection, case_study_folder; overwrite = true)
     # Check if folder exists and handle overwrite logic
     if isdir(case_study_folder)

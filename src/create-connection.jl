@@ -1,5 +1,15 @@
 export create_connection
 
+"""
+    create_empty_table_from_schema!(connection, table_name, schema, columns)
+
+Create an empty table with name `table_name`, overwritting an existing table,
+if necessary. The table should have the columns specified in `columns`, and
+their type and default values are informed by the `schema`.
+The `schema` is expected to be from TulipaEnergyModel for a given table.
+
+This function is for internal use only.
+"""
 function create_empty_table_from_schema!(connection, table_name, schema, columns)
     query = "CREATE OR REPLACE TABLE $table_name ("
     for (col_name, props) in schema
@@ -22,6 +32,11 @@ function create_empty_table_from_schema!(connection, table_name, schema, columns
     return connection
 end
 
+"""
+    _get_select_query_row(key, value, table_name)
+
+Using the TulipaEnergyModel.schema for `table_name`,
+"""
 function _get_select_query_row(key, value, table_name)
     key = String(key)
     if !haskey(TEM.schema[table_name], key)
@@ -33,7 +48,7 @@ function _get_select_query_row(key, value, table_name)
 end
 
 """
-    propagate_year_data!(tulipa)
+    propagate_year_data!(tulipa_data)
 
 Propagates keys from `asset` to `asset_milestone`, `asset_commission` and `asset_both`, to avoid explicitly attaching a global value.
 """
@@ -112,6 +127,13 @@ end
 
 # IDEA: function for_each_asset(f, tulipa)
 
+"""
+    create_connection(tulipa_data)
+    create_connection(tulipa_data, db)
+
+Creates a DuckDB connection and populates it with the data from `tulipa_data`.
+If `db` is not given, a memory connection is created.
+"""
 function create_connection(tulipa::TulipaData, db = ":memory:")
     connection = DBInterface.connect(DuckDB.DB, db)
     run_query(s) = DuckDB.query(connection, s)
