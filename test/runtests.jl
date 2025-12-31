@@ -52,6 +52,7 @@ const TAGS_DATA = Dict( # The tags below are a suggestion
     :slow => "Resource-intensive tests requiring significant time or memory",
 
     # Features (What features are being tested?)
+    :api => "API consistency and convention tests",
 )
 
 function main()

@@ -110,6 +110,7 @@ function attach_commission_data!(
 ) where {KeyType}
     add_or_update_year!(tulipa, year)
     attach_commission_data!(tulipa.graph[asset_name], year; kwargs...)
+    return tulipa
 end
 
 """
@@ -132,6 +133,7 @@ function attach_milestone_data!(
 ) where {KeyType}
     add_or_update_year!(tulipa, year, is_milestone = true)
     attach_milestone_data!(tulipa.graph[asset_name], year; kwargs...)
+    return tulipa
 end
 
 """
@@ -162,6 +164,7 @@ function attach_both_years_data!(
         milestone_year;
         kwargs...,
     )
+    return tulipa
 end
 
 """
@@ -212,6 +215,7 @@ function attach_commission_data!(
 ) where {KeyType}
     add_or_update_year!(tulipa, year)
     attach_commission_data!(tulipa.graph[from_asset_name, to_asset_name], year; kwargs...)
+    return tulipa
 end
 
 """
@@ -230,6 +234,7 @@ function attach_milestone_data!(
 ) where {KeyType}
     add_or_update_year!(tulipa, year, is_milestone = true)
     attach_milestone_data!(tulipa.graph[from_asset_name, to_asset_name], year; kwargs...)
+    return tulipa
 end
 
 """
@@ -256,6 +261,7 @@ function attach_both_years_data!(
         milestone_year;
         kwargs...,
     )
+    return tulipa
 end
 
 """
@@ -276,4 +282,5 @@ function attach_profile!(
     add_or_update_year!(tulipa, year, length = length(profile_value), is_milestone = true)
     asset = tulipa.graph[asset_name]
     attach_profile!(asset, profile_type, year, profile_value)
+    return tulipa
 end

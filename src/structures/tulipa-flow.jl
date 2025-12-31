@@ -38,6 +38,7 @@ object.
 """
 function attach_commission_data!(flow::TulipaFlow, year; kwargs...)
     flow.commission_year_data[year] = Dict{Symbol,Any}(kwargs...)
+    return flow
 end
 
 """
@@ -48,6 +49,7 @@ object.
 """
 function attach_milestone_data!(flow::TulipaFlow, year; kwargs...)
     flow.milestone_year_data[year] = Dict{Symbol,Any}(kwargs...)
+    return flow
 end
 
 """
@@ -64,4 +66,5 @@ function attach_both_years_data!(
 )
     @assert milestone_year ≥ commission_year
     flow.both_years_data[(commission_year, milestone_year)] = Dict{Symbol,Any}(kwargs...)
+    return flow
 end

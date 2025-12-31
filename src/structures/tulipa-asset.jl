@@ -70,6 +70,7 @@ function attach_commission_data!(
             )
         end # on_conflict = :skip
     end
+    return asset
 end
 
 """
@@ -109,6 +110,7 @@ function attach_milestone_data!(
             )
         end # on_conflict = :skip
     end
+    return asset
 end
 
 """
@@ -150,6 +152,7 @@ function attach_both_years_data!(
             )
         end # on_conflict = :skip
     end
+    return asset
 end
 
 """
@@ -164,4 +167,6 @@ function attach_profile!(
     profile_value::Vector,
 )
     asset.profiles[(profile_type, year)] = profile_value
+
+    return asset
 end
