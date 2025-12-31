@@ -4,10 +4,7 @@ using Documenter
 DocMeta.setdocmeta!(TulipaBuilder, :DocTestSetup, :(using TulipaBuilder); recursive = true)
 
 # Add titles of sections and overrides page titles
-const titles = Dict(
-    # "10-tutorials" => "Tutorials", # example folder title
-    "91-developer.md" => "Developer docs",
-)
+const titles = Dict("10-tutorials" => "Tutorials", "91-developer.md" => "Developer docs")
 
 function recursively_list_pages(folder; path_prefix = "")
     pages_list = Any[]
@@ -57,6 +54,8 @@ function list_pages()
 
     return ["index.md"; pages_list]
 end
+
+const TUTORIALS = recursively_list_pages(joinpath(@__DIR__, "src", "10-tutorials"))
 
 makedocs(;
     modules = [TulipaBuilder],

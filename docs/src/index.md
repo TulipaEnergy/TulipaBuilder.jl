@@ -10,9 +10,3 @@ The interface is **heavily** tied to [TulipaEnergyModel's input schema](https://
 
 !!! warning
     TulipaBuilder is still in development, and there is no guarantee that it is creating the model that you expect. Please check the output and open issues if you see something wrong.
-
-## Table of contents
-
-```@contents
-Pages = ["index.md"; Main.numbered_pages]
-```
