@@ -19,3 +19,4 @@ TulipaBuilder = {path = ".."}
 
 [compat]
 Documenter = "1"
+TulipaClustering = "0.5.1"
