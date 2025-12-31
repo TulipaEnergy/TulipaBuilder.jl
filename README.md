@@ -35,7 +35,7 @@ Here we list all these magic transformations, to help debug possible unexpected 
 - Sets years as `milestone` years when a profile is attached to them.
 - Propagates asset information to asset_milestone and asset_commission information so the year doesn't have to be explicitly set.
 
-WIP: None of these are correctly tested
+Some of these are tested to ensure they keep happening, or that they error when changed. Some are decisions to make our life easier at the moment, but are not tested.
 
 ## Target Users
 
