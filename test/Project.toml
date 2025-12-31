@@ -14,3 +14,13 @@ XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 
 [sources]
 TulipaBuilder = {path = ".."}
+
+[compat]
+CSV = "0.10"
+DataFrames = "1"
+DuckDB = "1"
+JuMP = "1"
+TestItemRunner = "1"
+TulipaClustering = "0.5"
+TulipaEnergyModel = "0.19"
+XLSX = "0.10"
