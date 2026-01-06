@@ -77,15 +77,15 @@ In a single-year problem, the year doesn't matter, so any integer value could be
 using CSV
 using DataFrames
 
-profiles_data = joinpath(@__DIR__, "basic-tutorial-data.csv")
+profiles_data = joinpath(@__DIR__, "..", "..", "..", "test", "tiny-profiles.csv")
 df = DataFrame(CSV.File(profiles_data))
-attach_profile!(tulipa, "solar", :availability, 2030, df[!, "solar"])
-attach_profile!(tulipa, "demand", :demand, 2030, df[!, "demand"])
+attach_profile!(tulipa, "solar", :availability, 2030, df[!, "availability-solar"])
+attach_profile!(tulipa, "demand", :demand, 2030, df[!, "demand-demand"])
 
 using Plots
 plt = plot()
-plot!(plt, df[!, "solar"], c=:orange, lw=2, label="solar")
-plot!(plt, df[!, "demand"], c=:green, lw=2, label="demand")
+plot!(plt, df[!, "availability-solar"], c=:orange, lw=2, label="solar")
+plot!(plt, df[!, "demand-demand"], c=:green, lw=2, label="demand")
 ```
 
 Now we can create the connection with the data of the Tulipa problem using the `create_connection` function.
