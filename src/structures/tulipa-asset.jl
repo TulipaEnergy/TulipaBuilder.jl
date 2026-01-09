@@ -14,6 +14,8 @@ mutable struct TulipaAsset{KeyType}
 
     profiles::Dict{Tuple{ProfileType,Int},Vector{Float64}}
 
+    partitions::Dict{Tuple{Int,Int},Dict{Symbol,Any}}
+
     """
         TulipaAsset(asset_name, type; kwargs...)
 
@@ -28,6 +30,7 @@ mutable struct TulipaAsset{KeyType}
             PerYear{Dict{Symbol,Any}}(),
             PerYear{Dict{Symbol,Any}}(),
             PerYears{Dict{Symbol,Any}}(),
+            Dict(),
             Dict(),
         )
     end
@@ -170,3 +173,24 @@ function attach_profile!(
 
     return asset
 end
+
+"""
+    set_partition!(asset::TulipaAsset, year, rep_period, specification, partition)
+    set_partition!(asset::TulipaAsset, year, rep_period, partition)
+
+Internal version of `set_partition!` acting directly on a `TulipaAsset` object.
+"""
+function set_partition!(
+    asset::TulipaAsset,
+    year::Int,
+    rep_period::Int,
+    specification::String,
+    partition,
+)
+    asset.partitions[(year, rep_period)] =
+        Dict(:specification => specification, :partition => partition)
+
+    return asset
+end
+set_partition!(asset::TulipaAsset, year::Int, rep_period::Int, partition) =
+    set_partition!(asset, year, rep_period, "uniform", partition)
