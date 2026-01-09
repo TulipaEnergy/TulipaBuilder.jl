@@ -13,6 +13,8 @@ mutable struct TulipaFlow{KeyType}
 
     profiles::Dict{Tuple{ProfileType,Int},Vector{Float64}}
 
+    partitions::Dict{Tuple{Int,Int},Dict{Symbol,Any}}
+
     """
         struct TulipaFlow(from_asset_name, to_asset_name)
 
@@ -28,6 +30,7 @@ mutable struct TulipaFlow{KeyType}
             PerYear{Dict{Symbol,Any}}(),
             PerYear{Dict{Symbol,Any}}(),
             PerYears{Dict{Symbol,Any}}(),
+            Dict(),
             Dict(),
         )
     end
@@ -89,3 +92,24 @@ function attach_profile!(
 
     return flow
 end
+
+"""
+    set_partition!(flow::TulipaFlow, year, rep_period, specification, partition)
+    set_partition!(flow::TulipaFlow, year, rep_period, partition)
+
+Internal version of `set_partition!` acting directly on a `TulipaFlow` object.
+"""
+function set_partition!(
+    flow::TulipaFlow,
+    year::Int,
+    rep_period::Int,
+    specification::String,
+    partition,
+)
+    flow.partitions[(year, rep_period)] =
+        Dict(:specification => specification, :partition => partition)
+
+    return flow
+end
+set_partition!(flow::TulipaFlow, year::Int, rep_period::Int, partition) =
+    set_partition!(flow, year, rep_period, "uniform", partition)
