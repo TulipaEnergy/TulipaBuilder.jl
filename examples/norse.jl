@@ -13,10 +13,11 @@ using TulipaBuilder:
     add_asset!,
     add_flow!,
     attach_profile!,
+    set_partition!,
     create_connection,
     create_case_study_csv_folder
 using CSV: CSV
-using DataFrames: DataFrame
+using DataFrames: DataFrame, combine, groupby, nrow, groupindices
 
 tulipa = TulipaData{String}()
 
@@ -25,7 +26,6 @@ tulipa = TulipaData{String}()
 asset_extra_defaults = (
     # asset_commission
     fixed_cost_storage_energy = 5.0,    # default is 0.0
-    initial_storage_level = 0.0,        # default is null
     # asset
     technical_lifetime = 15,            # default is 1
     discount_rate = 0.05,               # default is 0.0
@@ -34,135 +34,374 @@ flow_extra_defaults = (
     # flow
     technical_lifetime = 10,            # default is 1
     discount_rate = 0.02,               # default is 0.0
-    carrier = "electricity",            # default is null
+    investment_limit = 0.0,             # default is null
 )
 
-consumers = Dict(
-    "Asgard_E_demand" => (peak_demand = 65787.17792,),
-    "Midgard_E_demand" => (peak_demand = 19604.76443,),
-    "Valhalla_E_exports" => (peak_demand = 50.0,),
-    "Valhalla_H2_demand" => (peak_demand = 745.735,),
-    "Valhalla_Heat_demand" => (peak_demand = 3548.42445,),
-    "W_Spillage" => (peak_demand = 0.0,),
-)
-
+# producer assets
 producers = Dict(
-    "Asgard_Solar" => (
-        capacity = 100.0,
+    "Asgard_Solar" => (;
         investment_group = "renewables",
-        investable = true,
+        capacity = 100.0,
         investment_method = "simple",
         investment_integer = true,
+        investable = true,
         investment_cost = 350.0,
         investment_limit = 50000.0,
     ),
-    "G_imports" => (capacity = 75000.0,),
-    "Midgard_E_imports" => (capacity = 500.0,),
-    "Midgard_Nuclear_SMR" => (
-        capacity = 150.0,
-        investable = true,
-        investment_method = "simple",
-        investment_integer = false,
-        investment_cost = 6000.0,
+    "G_imports" => (;
+        capacity = 75000.0,
+        decommissionable = true,
+        initial_units = 1.0,
+        investment_limit = 0.0,
     ),
-    "Midgard_Wind" => (
-        capacity = 3.0,
-        investment_group = "renewables",
+    "Midgard_E_imports" => (;
+        capacity = 500.0,
+        decommissionable = true,
+        initial_units = 1.0,
+        investment_limit = 0.0,
+    ),
+    "Midgard_Nuclear_SMR" => (;
+        capacity = 150.0,
+        investment_method = "simple",
+        is_seasonal = true,
+        ramping = true,
+        max_ramp_up = 0.75,
+        max_ramp_down = 0.65,
         investable = true,
+        min_energy_timeframe_partition = 4500.0,
+        investment_cost = 6000.0,
+        initial_units = 6.6666667,
+    ),
+    "Midgard_Wind" => (;
+        investment_group = "renewables",
+        capacity = 3.0,
         investment_method = "simple",
         investment_integer = true,
+        is_seasonal = true,
+        investable = true,
+        max_energy_timeframe_partition = 4.5e6,
         investment_cost = 1300.0,
         investment_limit = 80000.0,
     ),
-    "Valhalla_Waste_heat" => (capacity = 200.0, investment_cost = 1450), # should there be an investment_cost here?
+    "Valhalla_Waste_heat" =>
+        (; capacity = 200.0, investment_cost = 1450, decommissionable = true),
 )
+for (asset, kwargs) in producers
+    add_asset!(
+        tulipa,
+        asset,
+        :producer;
+        initial_storage_level = 0.0,
+        kwargs...,
+        asset_extra_defaults...,
+    )
+end
 
-converters = Dict(
-    "Asgard_CCGT" => (
+# consumer assets
+consumers = Dict(
+    "Asgard_E_demand" => (; peak_demand = 65787.17792, decommissionable = true),
+    "Midgard_E_demand" => (; peak_demand = 19604.76443, decommissionable = true),
+    "Valhalla_E_exports" => (; peak_demand = 50.0, decommissionable = true),
+    "Valhalla_H2_demand" => (; peak_demand = 745.735, decommissionable = true),
+    "Valhalla_Heat_demand" => (;
+        consumer_balance_sense = ">=",
+        peak_demand = 3548.42445,
+        decommissionable = true,
+    ),
+    "W_Spillage" => (; consumer_balance_sense = ">=", initial_units = 1.0),
+)
+for (asset, kwargs) in consumers
+    add_asset!(
+        tulipa,
+        asset,
+        :consumer;
+        investment_limit = 0.0,
+        initial_storage_level = 0.0,
+        kwargs...,
+        asset_extra_defaults...,
+    )
+end
+
+# conversion assets
+# ccgt converters
+add_asset!(
+    tulipa,
+    "Asgard_CCGT",
+    :conversion,
+    investment_group = "ccgt",
+    capacity = 500.0,
+    investment_cost = 650.0,
+    min_operating_point = 0.25,
+    investment_method = "simple",
+    investment_integer = true,
+    ramping = true,
+    max_ramp_up = 0.5,
+    max_ramp_down = 0.3,
+    investable = true,
+    unit_commitment = true,
+    unit_commitment_method = "basic",
+    units_on_cost = 0.97,
+    conversion_efficiency = 0.55;
+    initial_storage_level = 0.0,
+    asset_extra_defaults...,
+)
+add_asset!(
+    tulipa,
+    "Midgard_CCGT",
+    :conversion,
+    investment_group = "ccgt",
+    capacity = 500.0,
+    investment_cost = 650.0,
+    min_operating_point = 0.4,
+    unit_commitment = true,
+    unit_commitment_integer = true,
+    unit_commitment_method = "basic",
+    conversion_efficiency = 0.5,
+    decommissionable = true,
+    initial_units = 5.0;
+    initial_storage_level = 0.0,
+    asset_extra_defaults...,
+)
+# other converters
+other_converters = Dict(
+    "Valhalla_Electrolyser" => (;
+        capacity = 100.0,
+        investment_cost = 1260.0,
+        conversion_efficiency = 0.7,
+        initial_units = 5.0,
+    ),
+    "Valhalla_Fuel_cell" =>
+        (; capacity = 100.0, investment_cost = 800.0, conversion_efficiency = 0.5),
+    "Valhalla_GT" => (;
         capacity = 500.0,
-        investment_group = "ccgt",
-        min_operating_point = 0.25,
-        investable = true,
+        investment_cost = 400.0,
+        investment_limit = 100000.0,
+        conversion_efficiency = 0.42,
+    ),
+    "Valhalla_H2_generator" =>
+        (; capacity = 100.0, investment_cost = 479.0, conversion_efficiency = 0.6),
+    "Valhalla_Heat_pump" =>
+        (; capacity = 100.0, investment_cost = 300.0, conversion_efficiency = 4.0),
+)
+for (asset, kwargs) in other_converters
+    add_asset!(
+        tulipa,
+        asset,
+        :conversion,
         investment_method = "simple",
         investment_integer = true,
-        investment_cost = 650.0,
-        ramping = true,
-        max_ramp_up = 0.5,
-        max_ramp_down = 0.3,
-    ),
-    "Midgard_CCGT" =>
-        (capacity = 500.0, investment_group = "ccgt", min_operating_point = 0.4),
-)
+        investable = true,
+        initial_storage_level = 0.0; # why not leave default?
+        kwargs...,
+        asset_extra_defaults...,
+    )
+end
 
-### assets
-add_asset!(
-    tulipa,
-    "ccgt",
-    :producer,
-    capacity = 400.0,
-    investment_method = "simple",
-    investment_integer = true,
-    investable = true,
-    investment_cost = 40.0,
-    investment_limit = 10000.0,
-    ;
-    asset_extra_defaults...,
+# storage asset
+storage = Dict(
+    "Asgard_Battery" => (;
+        capacity = 100.0,
+        investment_method = "simple",
+        investment_integer = true,
+        capacity_storage_energy = 10.0,
+        use_binary_storage_method = "binary",
+        storage_method_energy = true,
+        energy_to_power_ratio = 100.0,
+        investment_integer_storage_energy = true,
+        investable = true,
+        investment_cost = 300.0,
+        investment_limit = 25000.0,
+        investment_cost_storage_energy = 30.0,
+        investment_limit_storage_energy = 1000.0,
+        storage_charging_efficiency = 0.95,
+        storage_discharging_efficiency = 0.95,
+        initial_units = 7.25,
+    ),
+    "Midgard_Hydro" => (;
+        capacity = 250.0,
+        capacity_storage_energy = 50000.0,
+        is_seasonal = true,
+        use_binary_storage_method = "relaxed_binary",
+        storage_inflows = 10000.0,
+        investment_cost = 1600.0,
+        investment_limit = 0.0,
+        storage_charging_efficiency = 0.7,
+        storage_discharging_efficiency = 1.0,
+        decommissionable = true,
+        initial_units = 1.0,
+        initial_storage_units = 1.0,
+        initial_storage_level = 25000.0,
+    ),
+    "Midgard_PHS" => (;
+        capacity = 200.0,
+        investment_method = "simple",
+        investment_integer = true,
+        capacity_storage_energy = 100.0,
+        storage_method_energy = true,
+        energy_to_power_ratio = 1.0,
+        investable = true,
+        investment_cost = 800.0,
+        investment_limit = 5000.0,
+        investment_cost_storage_energy = 500.0,
+        investment_limit_storage_energy = 1000.0,
+        storage_charging_efficiency = 0.85,
+        storage_discharging_efficiency = 0.85,
+        initial_units = 1.75,
+    ),
+    "Valhalla_H2_storage" => (;
+        capacity = 500.0,
+        investment_method = "simple",
+        investment_integer = true,
+        capacity_storage_energy = 100.0,
+        is_seasonal = true,
+        energy_to_power_ratio = 10000.0,
+        investment_integer_storage_energy = true,
+        investable = true,
+        investment_cost = 0.1,
+        investment_cost_storage_energy = 10.0,
+        storage_charging_efficiency = 0.98,
+        storage_discharging_efficiency = 0.98,
+    ),
 )
-add_asset!(tulipa, "demand", :consumer, peak_demand = 1115.0, ; asset_extra_defaults...)
+for (asset, kwargs) in storage
+    add_asset!(tulipa, asset, :storage; kwargs..., asset_extra_defaults...)
+end
+
+# hub assets
 add_asset!(
     tulipa,
-    "ens",
-    :producer,
-    capacity = 1115.0,
-    initial_units = 1.0,
-    ;
-    asset_extra_defaults...,
-)
-add_asset!(
-    tulipa,
-    "ocgt",
-    :producer,
-    capacity = 100.0,
-    investment_method = "simple",
-    investment_integer = true,
-    investable = true,
-    investment_cost = 25.0,
-    ;
-    asset_extra_defaults...,
-)
-add_asset!(
-    tulipa,
-    "solar",
-    :producer,
-    description = "Solar",
-    capacity = 10.0,
-    resolution = 6,
-    investment_method = "simple",
-    investment_integer = true,
-    investable = true,
-    investment_cost = 50.0,
-    ;
-    asset_extra_defaults...,
-)
-add_asset!(
-    tulipa,
-    "wind",
-    :producer,
-    capacity = 50.0,
-    investment_method = "simple",
-    investment_integer = true,
-    investable = true,
-    investment_cost = 70.0,
-    ;
+    "Valhalla_E_balance",
+    :hub,
+    investment_limit = 0.0,
+    decommissionable = true,
+    initial_storage_level = 0.0;
     asset_extra_defaults...,
 )
 
 ### flow
-add_flow!(tulipa, "ccgt", "demand", operational_cost = 0.05, ; flow_extra_defaults...)
-add_flow!(tulipa, "ens", "demand", operational_cost = 0.18, ; flow_extra_defaults...)
-add_flow!(tulipa, "ocgt", "demand", operational_cost = 0.07, ; flow_extra_defaults...)
-add_flow!(tulipa, "solar", "demand", ; flow_extra_defaults...)
-add_flow!(tulipa, "wind", "demand", operational_cost = 0.001, ; flow_extra_defaults...)
+transport_flows = Dict(
+    ("Asgard_E_demand", "Midgard_E_demand") => (;
+        investment_integer = true,
+        investment_cost = 2000.0,
+        investment_limit = 50000.0,
+    ),
+    ("Asgard_E_demand", "Valhalla_E_balance") => (;
+        investment_cost = 5000.0,
+        initial_export_units = 1.0,
+        initial_import_units = 1.0,
+    ),
+    ("Midgard_E_demand", "Valhalla_E_balance") =>
+        (; investment_integer = true, investment_cost = 3500.0),
+)
+for ((from_asset, to_asset), kwargs) in transport_flows
+    add_flow!(
+        tulipa,
+        from_asset,
+        to_asset,
+        carrier = "electricity",
+        discount_rate = 0.02,
+        technical_lifetime = 10,
+        is_transport = true,
+        capacity = 1000.0,
+        investable = true,
+        ;
+        kwargs...,
+    )
+end
+
+electricity_flows = Dict(
+    ("Asgard_Battery", "Asgard_E_demand") => (; operational_cost = 0.003),
+    ("Asgard_CCGT", "Asgard_E_demand") => (;),
+    ("Asgard_Solar", "Asgard_Battery") => (; operational_cost = 0.001),
+    ("Asgard_Solar", "Asgard_E_demand") => (; operational_cost = 0.001),
+    ("Midgard_CCGT", "Midgard_E_demand") => (;),
+    ("Midgard_E_demand", "Midgard_Hydro") => (;),
+    ("Midgard_E_demand", "Midgard_PHS") => (; operational_cost = 0.002),
+    ("Midgard_E_imports", "Midgard_E_demand") => (; operational_cost = 0.02),
+    ("Midgard_Hydro", "Midgard_E_demand") => (;),
+    ("Midgard_Nuclear_SMR", "Midgard_E_demand") => (; operational_cost = 0.015),
+    ("Midgard_PHS", "Midgard_E_demand") => (; operational_cost = 0.004),
+    ("Midgard_Wind", "Midgard_E_demand") => (; operational_cost = 0.002),
+    ("Valhalla_E_balance", "Valhalla_E_exports") => (;),
+    ("Valhalla_E_balance", "Valhalla_Heat_pump") => (;),
+    ("Valhalla_E_balance", "Valhalla_Electrolyser") => (;),
+    ("Valhalla_Fuel_cell", "Valhalla_E_balance") => (;),
+    ("Valhalla_GT", "Valhalla_E_balance") => (;),
+)
+for ((from_asset, to_asset), kwargs) in electricity_flows
+    add_flow!(
+        tulipa,
+        from_asset,
+        to_asset;
+        carrier = "electricity",
+        kwargs...,
+        flow_extra_defaults...,
+    )
+end
+
+gas_flows = Dict(
+    ("G_imports", "Midgard_CCGT") => (;),
+    ("G_imports", "Asgard_CCGT") => (;),
+    ("G_imports", "Valhalla_GT") => (;),
+    ("G_imports", "Valhalla_H2_generator") => (;),
+)
+for ((from_asset, to_asset), kwargs) in gas_flows
+    add_flow!(
+        tulipa,
+        from_asset,
+        to_asset;
+        carrier = "gas",
+        operational_cost = 0.0015,
+        kwargs...,
+        flow_extra_defaults...,
+    )
+end
+
+heat_flows = Dict(
+    ("Valhalla_Fuel_cell", "Valhalla_Heat_demand") => (;),
+    ("Valhalla_Heat_pump", "Valhalla_Heat_demand") => (;),
+    ("Valhalla_Waste_heat", "Valhalla_Heat_pump") =>
+        (; operational_cost = 0.0025, conversion_coefficient = 0.25),
+)
+for ((from_asset, to_asset), kwargs) in heat_flows
+    add_flow!(
+        tulipa,
+        from_asset,
+        to_asset;
+        carrier = "heat",
+        kwargs...,
+        flow_extra_defaults...,
+    )
+end
+
+hydrogen_flows = Dict(
+    ("Valhalla_Electrolyser", "Valhalla_H2_demand") => (;),
+    ("Valhalla_H2_demand", "Valhalla_Fuel_cell") => (;),
+    ("Valhalla_H2_demand", "Valhalla_H2_storage") => (;),
+    ("Valhalla_H2_generator", "Valhalla_H2_demand") => (;),
+    ("Valhalla_H2_storage", "Valhalla_H2_demand") => (;),
+)
+for ((from_asset, to_asset), kwargs) in hydrogen_flows
+    add_flow!(
+        tulipa,
+        from_asset,
+        to_asset;
+        carrier = "hydrogen",
+        kwargs...,
+        flow_extra_defaults...,
+    )
+end
+
+add_flow!(
+    tulipa,
+    "Midgard_Hydro",
+    "W_Spillage",
+    carrier = "water",
+    operational_cost = 0.05,
+    capacity_coefficient = 0,
+    ;
+    flow_extra_defaults...,
+)
 
 ### profiles
 
@@ -171,17 +410,10 @@ df = DataFrame(CSV.File(norse_profiles_path))
 
 attach_profile!(
     tulipa,
-    "Argard_Solar",
+    "Asgard_Solar",
     :availability,
     2030,
     df[!, "availability-Asgard_Solar"],
-)
-attach_profile!(
-    tulipa,
-    "Asgard_Valhalla_flow",
-    :availability,
-    2030,
-    df[!, "availability-Valhalla_flow"],
 )
 attach_profile!(
     tulipa,
@@ -190,7 +422,6 @@ attach_profile!(
     2030,
     df[!, "availability-Midgard_Wind"],
 )
-
 attach_profile!(tulipa, "Asgard_E_demand", :demand, 2030, df[!, "demand-Asgard_E_demand"])
 attach_profile!(tulipa, "Midgard_E_demand", :demand, 2030, df[!, "demand-Midgard_E_demand"])
 attach_profile!(
@@ -207,141 +438,28 @@ attach_profile!(
     2030,
     df[!, "demand-Valhalla_Heat_demand"],
 )
+attach_profile!(tulipa, "Midgard_Hydro", :inflows, 2030, df[!, "inflows-Midgard_Hydro"])
 
-attach_profile!(tulipa, "Midgard_Hydro", :demand, 2030, df[!, "inflows-Midgard_Hydro"])
-# no profile for ocgt
+# Flows profiles
+attach_profile!(
+    tulipa,
+    "Asgard_E_demand",
+    "Valhalla_E_balance",
+    :availability,
+    2030,
+    df[!, "availability-Asgard_Valhalla_flow"],
+)
+
+# Partitions
+set_partition!(tulipa, "Asgard_Solar", 2030, 1, 4)
+set_partition!(tulipa, "Asgard_E_demand", 2030, 1, "explicit", "7;7;7;21;21;21;21;21;21;21")
+set_partition!(tulipa, "Midgard_Wind", 2030, 1, "math", "20x1+16x2+12x3+10x4+8x5")
+
+set_partition!(tulipa, "Asgard_Battery", "Asgard_E_demand", 2030, 1, "math", "28x3+42x2")
+set_partition!(tulipa, "Asgard_Solar", "Asgard_Battery", 2030, 1, "math", "42x2+28x3")
+set_partition!(tulipa, "Asgard_Solar", "Asgard_Battery", 2030, 2, "math", "4x3+3x4")
+set_partition!(tulipa, "Asgard_Solar", "Asgard_E_demand", 2030, 2, "math", "3x4+4x3")
 
 connection = create_connection(tulipa)
 
-# create_case_study_csv_folder(connection, joinpath(@__DIR__, "norse"))
-# TODO: At the end, uncomment above and delete/move everything below
-
-# External
-using DuckDB: DuckDB
-using TulipaClustering: TulipaClustering as TC
-using TulipaEnergyModel: TulipaEnergyModel as TEM
-using Test
-
-# TODO: Manually defined list of possible primary keys.
-# When TulipaEnergyModel defines these explicitly, this should be unnecessary
-POSSIBLE_PRIMARY_KEYS = [
-    "from_asset",
-    "to_asset",
-    "asset",
-    "year",
-    "commission_year",
-    "milestone_year",
-    "name",
-    "profile_name",
-    "profile_type",
-    "period",
-    "timestep",
-    "scenario",
-    "rep_period",
-]
-
-unfixable_missing_columns = Dict(
-    "asset" => ["min_operating_point", "max_ramp_down", "max_ramp_up"],
-    "assets_profiles" => ["profile_name"],
-)
-
-function get_vector_from_duckdb_query(connection, query)
-    return [row[1] for row in DuckDB.query(connection, query)]
-end
-
-function compare_duckdb_tables(connection, actual_table_name, expected_table_name)
-    table_names = Dict("actual" => actual_table_name, "expected" => expected_table_name)
-
-    # Tables have the same column names
-    column_names = Dict(
-        key => get_vector_from_duckdb_query(
-            connection,
-            "SELECT column_name FROM duckdb_columns() WHERE table_name = '$table_name'",
-        ) for (key, table_name) in table_names
-    )
-    @test Set(column_names["actual"]) == Set(column_names["expected"])
-
-    # Tables have the same amount of rows
-    num_rows = Dict(
-        key => get_vector_from_duckdb_query(
-            connection,
-            "SELECT COUNT(*) FROM $table_name",
-        )[1] for (key, table_name) in table_names
-    )
-    @test num_rows["actual"] == num_rows["expected"]
-
-    # Tables have the same content
-    distinct_union_select = "*"
-    missing_columns = get(unfixable_missing_columns, actual_table_name, String[])
-    if haskey(unfixable_missing_columns, actual_table_name)
-        distinct_union_select = "* EXCLUDE (" * join(missing_columns, ",") * ")"
-    end
-    distinct_union_df = DataFrame(
-        DuckDB.query(
-            connection,
-            "WITH cte_union AS (
-                FROM $actual_table_name
-                UNION BY NAME
-                FROM $expected_table_name
-            )
-            SELECT DISTINCT $distinct_union_select FROM cte_union
-            ",
-        ),
-    )
-    @test size(distinct_union_df, 1) == num_rows["actual"]
-
-    # DEBUGGING (hopefully won't need again)
-    # if size(distinct_union_df, 1) != num_rows["actual"]
-    #     columns_without_default = [
-    #         key for (key, value) in TEM.schema[actual_table_name] if
-    #         !haskey(value, "default")
-    #     ]
-    #     primary_keys = columns_without_default ∩ POSSIBLE_PRIMARY_KEYS
-    #     sort!(distinct_union_df, primary_keys)
-    #     @info "DEBUGGING" distinct_union_df
-    #     @info "DEBUGGING" primary_keys
-    #     primary_values = unique(sort(distinct_union_df[:, primary_keys], primary_keys))
-    #     # if size(primary_values, 1) != num_rows["actual"]
-    #     @info "DEBUGGING" primary_values
-    #     # end
-    #     for column in column_names["actual"]
-    #         if column in primary_keys || column in missing_columns
-    #             continue
-    #         end
-    #         df = unique(sort(distinct_union_df[:, [primary_keys; column]]))
-    #         if size(df, 1) != num_rows["actual"]
-    #             @info "DEBUGGING" df
-    #         end
-    #     end
-    # end
-end
-
-period_duration = 24
-num_rep_periods = 3
-TC.cluster!(connection, period_duration, num_rep_periods)
-TEM.populate_with_defaults!(connection)
-
-# Comparison
-norse_folder = joinpath(pkgdir(TEM), "test", "inputs", "Norse")
-for file in readdir(norse_folder, join = true)
-    table_name = replace(splitext(basename(file))[1], "-" => "_")
-    # TODO: Try to make clustering more predictable to compare these tables as well
-    if table_name in ["rep_periods_mapping", "profiles_rep_periods"]
-        continue
-    end
-    DuckDB.query(connection, "CREATE TABLE expected_$table_name AS FROM read_csv('$file')")
-    num_rows = only([
-        row.row_count for row in DuckDB.query(
-            connection,
-            "SELECT COUNT(*) AS row_count FROM expected_$table_name",
-        )
-    ])
-    if num_rows == 0
-        # Ignore empty tables
-        continue
-    end
-
-    # TODO: Use @testset
-    @info "Comparing $table_name"
-    @info compare_duckdb_tables(connection, table_name, "expected_$table_name")
-end
+create_case_study_csv_folder(connection, joinpath(@__DIR__, "norse"))
