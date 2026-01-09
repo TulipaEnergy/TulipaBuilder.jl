@@ -643,28 +643,5 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         end
     end
 
-    # for flow_tuple in MetaGraphsNext.edge_labels(tulipa.graph)
-    #     from_asset = flow_tuple[1]
-    #     to_asset = flow_tuple[2]
-    #     flow = tulipa.graph[flow_tuple...]
-    #     for (milestone_year, values) in flow.milestone_year_data
-    #         query = """INSERT INTO flow_milestone BY NAME (
-    #             SELECT '$from_asset' AS from_asset,
-    #                 '$to_asset' AS to_asset,
-    #                 $milestone_year AS milestone_year,
-    #         """
-    #         for (key, value) in values
-    #             query_row = _get_select_query_row(key, value, "flow_milestone")
-    #             if query_row == ""
-    #                 @debug "Ignoring column $key from flow ('$from_asset','$to_asset') (milestone years)"
-    #                 continue
-    #             end
-    #             query *= query_row
-    #         end
-    #         query *= ")"
-    #         run_query(query)
-    #     end
-    # end
-
     return connection
 end
