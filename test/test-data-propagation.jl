@@ -17,23 +17,35 @@ end
     tulipa = TulipaData{Symbol}()
     add_asset!(tulipa, :prod1, :producer)
     add_asset!(tulipa, :prod2, :producer)
+    add_asset!(tulipa, :prod3, :producer)
     add_asset!(tulipa, :dem, :consumer)
     add_flow!(tulipa, :prod1, :dem, operational_cost = 1.0)
-    add_flow!(tulipa, :prod2, :dem, decommissionable = true, fixed_cost = 5.0)
+    add_flow!(
+        tulipa,
+        :prod2,
+        :dem,
+        decommissionable = true,
+        fixed_cost = 5.0,
+        is_transport = true,
+    )
+    add_flow!(tulipa, :prod3, :dem, decommissionable = false, is_transport = true)
     tulipa.years[2025] = Dict(:length => 1, :is_milestone => true)
 
     connection = create_connection(tulipa)
-    decommissionable = Dict(("prod1", "dem") => false, ("prod2", "dem") => true)
-    fixed_cost = Dict(("prod1", "dem") => 0.0, ("prod2", "dem") => 5.0)
-    operational_cost = Dict(("prod1", "dem") => 1.0, ("prod2", "dem") => 0.0)
+    decommissionable = Dict(("prod2", "dem") => true, ("prod3", "dem") => false)
+    fixed_cost =
+        Dict(("prod1", "dem") => 0.0, ("prod2", "dem") => 5.0, ("prod3", "dem") => 0.0)
+    operational_cost =
+        Dict(("prod1", "dem") => 1.0, ("prod2", "dem") => 0.0, ("prod3", "dem") => 0.0)
     for row in DuckDB.query(connection, "FROM flow_commission")
         @test row.fixed_cost == fixed_cost[(row.from_asset, row.to_asset)]
     end
     for row in DuckDB.query(connection, "FROM flow_milestone")
         @test row.operational_cost == operational_cost[(row.from_asset, row.to_asset)]
     end
-    # Currently ignoring flow_both
-    # for row in DuckDB.query(connection, "FROM flow_both")
-    #     @test row.decommissionable == decommissionable[(row.from_asset, row.to_asset)]
-    # end
+    flow_both_rows = collect(DuckDB.query(connection, "FROM flow_both"))
+    @test length(flow_both_rows) == length(decommissionable)
+    for row in flow_both_rows
+        @test row.decommissionable == decommissionable[(row.from_asset, row.to_asset)]
+    end
 end
