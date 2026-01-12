@@ -58,7 +58,7 @@ end
 @testitem "Create connection after add_asset_group" tags = [] setup =
     [CommonSetup, CreateConnectionSetup] begin
     tulipa = TulipaData()
-    add_asset_group!(tulipa, "group", 2030)
+    add_asset_group!(tulipa, "group", 2030, invest_method = true)
     connection = create_connection(tulipa)
     @test get_non_empty_tables(connection) == ["group_asset"]
 end
