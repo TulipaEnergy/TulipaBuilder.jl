@@ -29,6 +29,15 @@
         return [row[1] for row in DuckDB.query(connection, query)]
     end
 
+    function get_non_empty_tables(connection)
+        return sort(
+            get_vector_from_duckdb_query(
+                connection,
+                "SELECT table_name FROM duckdb_tables() WHERE estimated_size > 0",
+            ),
+        )
+    end
+
     function compare_duckdb_tables(connection, actual_table_name, expected_table_name)
         table_names = Dict("actual" => actual_table_name, "expected" => expected_table_name)
 

@@ -34,7 +34,7 @@ end
     @test isempty(tulipa.years)
 
     # Attach commission data to year 2025
-    attach_commission_data!(tulipa, :ccgt, 2025, capacity = 100.0)
+    attach_commission_data!(tulipa, :ccgt, 2025, investment_cost = 100.0)
 
     # Verify year_data was automatically created
     @test haskey(tulipa.years, 2025)
