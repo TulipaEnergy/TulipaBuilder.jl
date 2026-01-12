@@ -563,5 +563,30 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         ",
     )
 
+    # group_asset tables
+    if length(tulipa.asset_groups) > 0
+        create_empty_table_from_schema!(
+            connection,
+            "group_asset",
+            TEM.schema["group_asset"],
+            [
+                "name",
+                "milestone_year",
+                "invest_method",
+                "min_investment_limit",
+                "max_investment_limit",
+            ],
+        )
+        for ((group_name, year), group_data) in tulipa.asset_groups
+            query = """INSERT INTO group_asset BY NAME (
+                SELECT '$group_name' AS name, $year AS milestone_year,"""
+            for (key, value) in group_data
+                query *= _get_select_query_row(key, value, "group_asset")
+            end
+            query *= ")"
+            run_query(query)
+        end
+    end
+
     return connection
 end

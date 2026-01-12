@@ -5,7 +5,8 @@ export TulipaData,
     attach_commission_data!,
     attach_milestone_data!,
     attach_both_years_data!,
-    attach_profile!
+    attach_profile!,
+    add_asset_group!
 
 """
 Main structure to hold all tulipa data.
@@ -15,6 +16,8 @@ mutable struct TulipaData{KeyType}
     validated::Bool
 
     years::PerYear{Dict{Symbol,Any}}
+
+    asset_groups::Dict{Tuple{String,Int},Dict{Symbol,Any}}
 
     """
         TulipaData{KeyType}()
@@ -31,7 +34,7 @@ mutable struct TulipaData{KeyType}
             edge_data_type = TulipaFlow,
         )
 
-        return new{KeyType}(graph, false, Dict())
+        return new{KeyType}(graph, false, Dict(), Dict())
     end
 end
 
@@ -282,5 +285,25 @@ function attach_profile!(
     add_or_update_year!(tulipa, year, length = length(profile_value), is_milestone = true)
     asset = tulipa.graph[asset_name]
     attach_profile!(asset, profile_type, year, profile_value)
+    return tulipa
+end
+
+"""
+    add_asset_group!(tulipa_data, group_name, year; kwargs...)
+
+
+Add a new asset group `group_name` for the given `year`.
+"""
+function add_asset_group!(
+    tulipa::TulipaData{KeyType},
+    group_name::KeyType,
+    year::Int;
+    kwargs...,
+) where {KeyType}
+    if haskey(tulipa.asset_groups, (group_name, year))
+        error("Group asset exists")
+    end
+    tulipa.asset_groups[(group_name, year)] = Dict{Symbol,Any}(kwargs...)
+
     return tulipa
 end
