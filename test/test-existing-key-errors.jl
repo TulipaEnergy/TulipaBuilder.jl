@@ -17,6 +17,15 @@
         2030,
         ones(24),
     )
+    attach_profile!(tulipa, "producer", "consumer", :inflows, 2030, ones(24))
+    @test_throws ExistingKeyError attach_profile!(
+        tulipa,
+        "producer",
+        "consumer",
+        :inflows,
+        2030,
+        ones(24),
+    )
     add_asset_group!(tulipa, "group", 2030)
     @test_throws ExistingKeyError add_asset_group!(tulipa, "group", 2030)
 end

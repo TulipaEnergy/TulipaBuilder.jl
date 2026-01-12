@@ -53,6 +53,31 @@ end
     connection = create_connection(tulipa)
     @test get_non_empty_tables(connection) ==
           [MIN_ASSET_TABLES; "assets_profiles"; MIN_FLOW_TABLES; "profiles"; "year_data"]
+
+    tulipa = TulipaData()
+    add_asset!(tulipa, "producer", :producer)
+    add_asset!(tulipa, "consumer", :consumer)
+    add_flow!(tulipa, "producer", "consumer")
+    attach_profile!(tulipa, "producer", "consumer", :inflows, 2030, ones(24))
+    connection = create_connection(tulipa)
+    @test get_non_empty_tables(connection) ==
+          [MIN_ASSET_TABLES; MIN_FLOW_TABLES; "flows_profiles"; "profiles"; "year_data"]
+
+    tulipa = TulipaData()
+    add_asset!(tulipa, "producer", :producer)
+    add_asset!(tulipa, "consumer", :consumer)
+    add_flow!(tulipa, "producer", "consumer")
+    attach_profile!(tulipa, "producer", :availability, 2030, ones(24))
+    attach_profile!(tulipa, "producer", "consumer", :inflows, 2030, ones(24))
+    connection = create_connection(tulipa)
+    @test get_non_empty_tables(connection) == [
+        MIN_ASSET_TABLES
+        "assets_profiles"
+        MIN_FLOW_TABLES
+        "flows_profiles"
+        "profiles"
+        "year_data"
+    ]
 end
 
 @testitem "Create connection after add_asset_group" tags = [] setup =

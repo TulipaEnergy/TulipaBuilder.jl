@@ -47,4 +47,5 @@ end
     @test attach_commission_data!(flow, 2030, capacity = 1.0) === flow
     @test attach_milestone_data!(flow, 2030, is_transport = false) === flow
     @test attach_both_years_data!(flow, 2030, 2030, efficiency = 1.0) === flow
+    @test attach_profile!(flow, :inflows, 2030, rand(24)) === flow
 end

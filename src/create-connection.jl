@@ -484,6 +484,55 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             )
         end
     end
+    # Table flows_profiles
+    needs_flows_profiles = false
+    for (from_asset_name, to_asset_name) in MetaGraphsNext.edge_labels(tulipa.graph)
+        flow = tulipa.graph[from_asset_name, to_asset_name]
+        if length(flow.profiles) > 0
+            needs_flows_profiles = true
+        end
+    end
+    if needs_flows_profiles
+        DuckDB.query(
+            connection,
+            "CREATE OR REPLACE TABLE flows_profiles (
+                from_asset VARCHAR,
+                to_asset VARCHAR,
+                commission_year INT64,
+                profile_name VARCHAR,
+                profile_type VARCHAR,
+            )",
+        )
+        for (from_asset_name, to_asset_name) in MetaGraphsNext.edge_labels(tulipa.graph)
+            flow = tulipa.graph[from_asset_name, to_asset_name]
+            for ((profile_type, year), profile_value) in flow.profiles
+                profile_name = "$from_asset_name-$to_asset_name-$profile_type-$year"
+                profiles_df = DataFrame(
+                    profile_name = profile_name,
+                    year = year,
+                    timestep = 1:length(profile_value),
+                    value = profile_value,
+                )
+                DuckDB.register_data_frame(connection, profiles_df, "tmp_profile")
+                DuckDB.query(
+                    connection,
+                    "INSERT INTO profiles BY NAME (SELECT * FROM tmp_profile)",
+                )
+                DuckDB.query(connection, "DROP VIEW tmp_profile")
+
+                DuckDB.query(
+                    connection,
+                    "INSERT INTO flows_profiles BY NAME (SELECT
+                        '$from_asset_name' AS from_asset,
+                        '$to_asset_name' AS to_asset,
+                        $year AS commission_year,
+                        '$profile_name' AS profile_name,
+                        '$profile_type' AS profile_type,
+                    )",
+                )
+            end
+        end
+    end
 
     DuckDB.query(
         connection,
