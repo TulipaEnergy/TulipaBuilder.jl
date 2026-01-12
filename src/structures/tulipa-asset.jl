@@ -166,14 +166,15 @@ function attach_profile!(
     year::Int,
     profile_value::Vector,
 )
-    if haskey(asset.profiles, (profile_type, year))
+    key = (profile_type, year)
+    if haskey(asset.profiles, key)
         throw(
             ExistingKeyError(
                 "Profile of type '$profile_type' for year '$year' already attached",
             ),
         )
     end
-    asset.profiles[(profile_type, year)] = profile_value
+    asset.profiles[key] = profile_value
 
     return asset
 end

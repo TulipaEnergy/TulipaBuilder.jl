@@ -11,6 +11,8 @@ mutable struct TulipaFlow{KeyType}
     milestone_year_data::PerYear{Dict{Symbol,Any}}
     both_years_data::PerYears{Dict{Symbol,Any}}
 
+    profiles::Dict{Tuple{ProfileType,Int},Vector{Float64}}
+
     """
         struct TulipaFlow(from_asset_name, to_asset_name)
 
@@ -26,6 +28,7 @@ mutable struct TulipaFlow{KeyType}
             PerYear{Dict{Symbol,Any}}(),
             PerYear{Dict{Symbol,Any}}(),
             PerYears{Dict{Symbol,Any}}(),
+            Dict(),
         )
     end
 end
@@ -68,5 +71,29 @@ function attach_both_years_data!(
 )
     @assert milestone_year ≥ commission_year
     flow.both_years_data[(commission_year, milestone_year)] = Dict{Symbol,Any}(kwargs...)
+    return flow
+end
+
+"""
+    attach_profile!(flow::TulipaFlow, profile_type, year, profile_value)
+
+Internal version of `attach_profile!` acting directly on a `TulipaFlow` object.
+"""
+function attach_profile!(
+    flow::TulipaFlow,
+    profile_type::ProfileType,
+    year::Int,
+    profile_value::Vector,
+)
+    key = (profile_type, year)
+    if haskey(flow.profiles, key)
+        throw(
+            ExistingKeyError(
+                "Profile of type '$profile_type' for year '$year' already attached",
+            ),
+        )
+    end
+    flow.profiles[key] = profile_value
+
     return flow
 end
