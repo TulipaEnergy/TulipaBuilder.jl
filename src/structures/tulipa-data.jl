@@ -65,7 +65,7 @@ public API.
 """
 function add_asset!(tulipa::TulipaData, asset::TulipaAsset)
     if haskey(tulipa.graph, asset.name)
-        error("Asset exists")
+        throw(ExistingKeyError("Asset exists"))
     end
     tulipa.graph[asset.name] = asset
 
@@ -179,7 +179,7 @@ public API.
 """
 function add_flow!(tulipa::TulipaData, flow::TulipaFlow)
     if haskey(tulipa.graph, flow.from, flow.to)
-        error("Flow exists")
+        throw(ExistingKeyError("Flow exists"))
     end
     tulipa.graph[flow.from, flow.to] = flow
 
@@ -301,7 +301,7 @@ function add_asset_group!(
     kwargs...,
 ) where {KeyType}
     if haskey(tulipa.asset_groups, (group_name, year))
-        error("Group asset exists")
+        throw(ExistingKeyError("Group asset exists"))
     end
     tulipa.asset_groups[(group_name, year)] = Dict{Symbol,Any}(kwargs...)
 
