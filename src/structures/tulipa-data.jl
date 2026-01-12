@@ -6,7 +6,9 @@ export TulipaData,
     attach_milestone_data!,
     attach_both_years_data!,
     attach_profile!,
-    add_asset_group!
+    add_asset_group!,
+    attach_profile!,
+    set_partition!
 
 """
 Main structure to hold all tulipa data.
@@ -329,3 +331,69 @@ function add_asset_group!(
 
     return tulipa
 end
+
+"""
+    set_partition!(tulipa_data, asset_name, year, rep_period, specification, partition)
+    set_partition!(tulipa_data, asset_name, year, rep_period, partition)
+    set_partition!(tulipa_data, from_asset_name, to_asset_name, year, rep_period, specification, partition)
+    set_partition!(tulipa_data, from_asset_name, to_asset_name, year, rep_period, partition)
+
+Set partition of the asset named `asset_name` or the flow `(from_asset_name, to_asset_name)`.
+In both cases, if `specification` is ommitted, then `"uniform"` is used.
+
+Notice that the representative period `rep_period` is expected, even though no
+other part of the code deals with it, because partitions are tied to
+clustering. This might change in the future.
+"""
+function set_partition!(
+    tulipa::TulipaData{KeyType},
+    asset_name::KeyType,
+    year::Int,
+    rep_period::Int,
+    specification,
+    partition,
+) where {KeyType}
+    asset = tulipa.graph[asset_name]
+    set_partition!(asset, year, rep_period, specification, partition)
+
+    return tulipa
+end
+set_partition!(
+    tulipa::TulipaData{KeyType},
+    asset_name::KeyType,
+    year::Int,
+    rep_period::Int,
+    partition,
+) where {KeyType} =
+    set_partition!(tulipa, asset_name, year, rep_period, "uniform", partition)
+
+function set_partition!(
+    tulipa::TulipaData{KeyType},
+    from_asset_name::KeyType,
+    to_asset_name::KeyType,
+    year::Int,
+    rep_period::Int,
+    specification,
+    partition,
+) where {KeyType}
+    flow = tulipa.graph[from_asset_name, to_asset_name]
+    set_partition!(flow, year, rep_period, specification, partition)
+
+    return tulipa
+end
+set_partition!(
+    tulipa::TulipaData{KeyType},
+    from_asset_name::KeyType,
+    to_asset_name::KeyType,
+    year::Int,
+    rep_period::Int,
+    partition,
+) where {KeyType} = set_partition!(
+    tulipa,
+    from_asset_name,
+    to_asset_name,
+    year,
+    rep_period,
+    "uniform",
+    partition,
+)

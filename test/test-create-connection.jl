@@ -87,3 +87,21 @@ end
     connection = create_connection(tulipa)
     @test get_non_empty_tables(connection) == ["group_asset"]
 end
+
+@testitem "Create connection after set_partition!" tags = [] setup =
+    [CommonSetup, CreateConnectionSetup] begin
+    tulipa = TulipaData()
+    add_asset!(tulipa, "producer", :producer)
+    set_partition!(tulipa, "producer", 2030, 1, 3)
+    connection = create_connection(tulipa)
+    @test get_non_empty_tables(connection) == ["asset", "assets_rep_periods_partitions"]
+
+    tulipa = TulipaData()
+    add_asset!(tulipa, "producer", :producer)
+    add_asset!(tulipa, "consumer", :consumer)
+    add_flow!(tulipa, "producer", "consumer")
+    set_partition!(tulipa, "producer", "consumer", 2030, 1, 3)
+    connection = create_connection(tulipa)
+    @test get_non_empty_tables(connection) ==
+          ["asset", "flow", "flows_rep_periods_partitions"]
+end

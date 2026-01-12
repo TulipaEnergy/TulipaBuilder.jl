@@ -28,4 +28,8 @@
     )
     add_asset_group!(tulipa, "group", 2030)
     @test_throws ExistingKeyError add_asset_group!(tulipa, "group", 2030)
+    set_partition!(tulipa, "producer", 2030, 1, 3)
+    @test_throws ExistingKeyError set_partition!(tulipa, "producer", 2030, 1, 3)
+    set_partition!(tulipa, "producer", "consumer", 2030, 1, 3)
+    @test_throws ExistingKeyError set_partition!(tulipa, "producer", "consumer", 2030, 1, 3)
 end
