@@ -20,6 +20,12 @@
     @test attach_commission_data!(tulipa, "producer1", "consumer1", 2030) === tulipa
     @test attach_milestone_data!(tulipa, "producer1", "consumer1", 2030) === tulipa
     @test attach_both_years_data!(tulipa, "producer1", "consumer1", 2030, 2030) === tulipa
+
+    # set_partition functions
+    @test set_partition!(tulipa, "producer1", 2030, 1, 3) === tulipa
+    @test set_partition!(tulipa, "producer1", 2030, 2, :math, "4x6") === tulipa
+    @test set_partition!(tulipa, "producer1", "consumer1", 2030, 1, 3) === tulipa
+    @test set_partition!(tulipa, "producer1", "consumer1", 2030, 2, :math, "4x6") === tulipa
 end
 
 @testitem "TulipaAsset in-place functions return asset" tags = [:unit, :fast, :api] begin
@@ -36,6 +42,8 @@ end
     @test attach_milestone_data!(asset, 2030, investable = true) === asset
     @test attach_both_years_data!(asset, 2030, 2030, initial_units = 1) === asset
     @test attach_profile!(asset, :availability, 2030, rand(24)) === asset
+    @test set_partition!(asset, 2030, 3, 4) === asset
+    @test set_partition!(asset, 2030, 4, :explicit, "12;12") === asset
 end
 
 @testitem "TulipaFlow in-place functions return flow" tags = [:unit, :fast, :api] begin
@@ -48,4 +56,6 @@ end
     @test attach_milestone_data!(flow, 2030, is_transport = false) === flow
     @test attach_both_years_data!(flow, 2030, 2030, efficiency = 1.0) === flow
     @test attach_profile!(flow, :inflows, 2030, rand(24)) === flow
+    @test set_partition!(flow, 2030, 3, 4) === flow
+    @test set_partition!(flow, 2030, 4, :explicit, "12;12") === flow
 end

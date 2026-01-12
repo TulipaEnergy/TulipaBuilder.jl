@@ -640,5 +640,83 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         end
     end
 
+    # Table assets_rep_periods_partitions
+    columns = ["asset", "year", "rep_period", "specification", "partition"]
+    need_table = any(
+        length(tulipa.graph[a].partitions) > 0 for a in MetaGraphsNext.labels(tulipa.graph)
+    )
+    if need_table
+        create_empty_table_from_schema!(
+            connection,
+            "assets_rep_periods_partitions",
+            TEM.schema["assets_rep_periods_partitions"],
+            columns,
+        )
+        for asset_name in MetaGraphsNext.labels(tulipa.graph)
+            asset = tulipa.graph[asset_name]
+            partitions = asset.partitions
+            if length(partitions) == 0
+                continue
+            end
+            for ((year, rep_period), value) in partitions
+                query = "INSERT INTO assets_rep_periods_partitions BY NAME (SELECT '$asset_name' AS asset, "
+                query *= "$year as year, $rep_period as rep_period,"
+                specification = get(value, :specification, "uniform")
+                partition = value[:partition] # no default for partition
+                query *= _get_select_query_row(
+                    :specification,
+                    specification,
+                    "assets_rep_periods_partitions",
+                )
+                query *= _get_select_query_row(
+                    :partition,
+                    partition,
+                    "assets_rep_periods_partitions",
+                )
+                query *= ")"
+                run_query(query)
+            end
+        end
+    end
+
+    columns = ["from_asset", "to_asset", "year", "rep_period", "specification", "partition"]
+    need_table = any(
+        length(tulipa.graph[e...].partitions) > 0 for
+        e in MetaGraphsNext.edge_labels(tulipa.graph)
+    )
+    if need_table
+        create_empty_table_from_schema!(
+            connection,
+            "flows_rep_periods_partitions",
+            TEM.schema["flows_rep_periods_partitions"],
+            columns,
+        )
+        for (from_asset_name, to_asset_name) in MetaGraphsNext.edge_labels(tulipa.graph)
+            flow = tulipa.graph[from_asset_name, to_asset_name]
+            partitions = flow.partitions
+            if length(partitions) == 0
+                continue
+            end
+            for ((year, rep_period), value) in partitions
+                query = "INSERT INTO flows_rep_periods_partitions BY NAME (SELECT '$from_asset_name' AS from_asset, '$to_asset_name' AS to_asset,"
+                query *= "$year as year, $rep_period as rep_period, "
+                specification = get(value, :specification, "uniform")
+                partition = value[:partition] # no default for partition
+                query *= _get_select_query_row(
+                    :specification,
+                    specification,
+                    "flows_rep_periods_partitions",
+                )
+                query *= _get_select_query_row(
+                    :partition,
+                    partition,
+                    "flows_rep_periods_partitions",
+                )
+                query *= ")"
+                run_query(query)
+            end
+        end
+    end
+
     return connection
 end

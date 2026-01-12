@@ -68,7 +68,6 @@ end
         :producer;
         description = "Solar",
         capacity = 10.0,
-        resolution = 6,
         investment_method = "simple",
         investment_integer = true,
         investable = true,

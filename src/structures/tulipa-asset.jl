@@ -14,6 +14,8 @@ mutable struct TulipaAsset{KeyType}
 
     profiles::Dict{Tuple{ProfileType,Int},Vector{Float64}}
 
+    partitions::Dict{Tuple{Int,Int},Dict{Symbol,Any}}
+
     """
         TulipaAsset(asset_name, type; kwargs...)
 
@@ -28,6 +30,7 @@ mutable struct TulipaAsset{KeyType}
             PerYear{Dict{Symbol,Any}}(),
             PerYear{Dict{Symbol,Any}}(),
             PerYears{Dict{Symbol,Any}}(),
+            Dict(),
             Dict(),
         )
     end
@@ -178,3 +181,31 @@ function attach_profile!(
 
     return asset
 end
+
+"""
+    set_partition!(asset::TulipaAsset, year, rep_period, specification, partition)
+    set_partition!(asset::TulipaAsset, year, rep_period, partition)
+
+Internal version of `set_partition!` acting directly on a `TulipaAsset` object.
+"""
+function set_partition!(
+    asset::TulipaAsset,
+    year::Int,
+    rep_period::Int,
+    specification,
+    partition,
+)
+    key = (year, rep_period)
+    if haskey(asset.partitions, key)
+        throw(
+            ExistingKeyError(
+                "Partition for year '$year' for rep_period '$rep_period' already set",
+            ),
+        )
+    end
+    asset.partitions[key] = Dict(:specification => specification, :partition => partition)
+
+    return asset
+end
+set_partition!(asset::TulipaAsset, year::Int, rep_period::Int, partition) =
+    set_partition!(asset, year, rep_period, "uniform", partition)
