@@ -8,6 +8,7 @@
     @test add_asset!(tulipa, "producer1", :producer) === tulipa
     @test add_asset!(tulipa, "consumer1", :consumer) === tulipa
     @test add_flow!(tulipa, "producer1", "consumer1") === tulipa
+    @test add_asset_group!(tulipa, "group1", 2030) === tulipa
 
     # attach_* functions (asset variants)
     @test attach_commission_data!(tulipa, "producer1", 2030) === tulipa
