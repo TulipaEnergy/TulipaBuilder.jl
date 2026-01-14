@@ -498,7 +498,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             "CREATE OR REPLACE TABLE flows_profiles (
                 from_asset VARCHAR,
                 to_asset VARCHAR,
-                commission_year INT64,
+                year INT64,
                 profile_name VARCHAR,
                 profile_type VARCHAR,
             )",
@@ -525,7 +525,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
                     "INSERT INTO flows_profiles BY NAME (SELECT
                         '$from_asset_name' AS from_asset,
                         '$to_asset_name' AS to_asset,
-                        $year AS commission_year,
+                        $year AS year,
                         '$profile_name' AS profile_name,
                         '$profile_type' AS profile_type,
                     )",
