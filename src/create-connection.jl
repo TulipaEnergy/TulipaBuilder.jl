@@ -442,6 +442,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         "CREATE OR REPLACE TABLE profiles (
             profile_name VARCHAR,
             year INT64,
+            scenario INT64,
             timestep INT64,
             value DOUBLE,
         )",
@@ -458,20 +459,15 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
     )
     for asset_name in MetaGraphsNext.labels(tulipa.graph)
         asset = tulipa.graph[asset_name]
+        # Handle non-scenario profiles (default scenario is added)
         for ((profile_type, year), profile_value) in asset.profiles
             profile_name = "$asset_name-$profile_type-$year"
-            profiles_df = DataFrame(
-                profile_name = profile_name,
-                year = year,
-                timestep = 1:length(profile_value),
-                value = profile_value,
-            )
-            DuckDB.register_data_frame(connection, profiles_df, "tmp_profile")
-            DuckDB.query(
-                connection,
-                "INSERT INTO profiles BY NAME (SELECT * FROM tmp_profile)",
-            )
-            DuckDB.query(connection, "DROP VIEW tmp_profile")
+            for (timestep_idx, value) in enumerate(profile_value)
+                DuckDB.query(
+                    connection,
+                    "INSERT INTO profiles VALUES ('$profile_name', $year, $DefaultScenario, $timestep_idx, $value)",
+                )
+            end
 
             DuckDB.query(
                 connection,
@@ -482,6 +478,34 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
                     '$profile_type' AS profile_type,
                 )",
             )
+        end
+        # Handle scenario profiles
+        for ((profile_type, year, scenario), profile_value) in asset.scenario_profiles
+            profile_name = "$asset_name-$profile_type-$year"
+            for (timestep_idx, value) in enumerate(profile_value)
+                DuckDB.query(
+                    connection,
+                    "INSERT INTO profiles VALUES ('$profile_name', $year, $scenario, $timestep_idx, $value)",
+                )
+            end
+        end
+        # Add assets_profiles entry only once for scenario profiles (after the first scenario)
+        seen_profile_keys = Set{Tuple{ProfileType,Int}}()
+        for ((profile_type, year, scenario), _) in asset.scenario_profiles
+            profile_key = (profile_type, year)
+            if !(profile_key in seen_profile_keys)
+                push!(seen_profile_keys, profile_key)
+                profile_name = "$asset_name-$profile_type-$year"
+                DuckDB.query(
+                    connection,
+                    "INSERT INTO assets_profiles BY NAME (SELECT
+                        '$asset_name' AS asset,
+                        $year AS commission_year,
+                        '$profile_name' AS profile_name,
+                        '$profile_type' AS profile_type,
+                    )",
+                )
+            end
         end
     end
     # Table flows_profiles

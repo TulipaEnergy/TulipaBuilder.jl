@@ -13,6 +13,7 @@ mutable struct TulipaAsset{KeyType}
     both_years_data::PerYears{Dict{Symbol,Any}}
 
     profiles::Dict{Tuple{ProfileType,Int},Vector{Float64}}
+    scenario_profiles::Dict{Tuple{ProfileType,Int,ScenarioType},Vector{Float64}}
 
     partitions::Dict{Tuple{Int,Int},Dict{Symbol,Any}}
 
@@ -30,6 +31,7 @@ mutable struct TulipaAsset{KeyType}
             PerYear{Dict{Symbol,Any}}(),
             PerYear{Dict{Symbol,Any}}(),
             PerYears{Dict{Symbol,Any}}(),
+            Dict(),
             Dict(),
             Dict(),
         )
@@ -178,6 +180,31 @@ function attach_profile!(
         )
     end
     asset.profiles[key] = profile_value
+
+    return asset
+end
+
+"""
+    attach_profile!(asset::TulipaAsset, profile_type, year, scenario, profile_value)
+
+Internal version of `attach_profile!` with scenario support acting directly on a `TulipaAsset` object.
+"""
+function attach_profile!(
+    asset::TulipaAsset,
+    profile_type::ProfileType,
+    year::Int,
+    scenario::ScenarioType,
+    profile_value::Vector,
+)
+    key = (profile_type, year, scenario)
+    if haskey(asset.scenario_profiles, key)
+        throw(
+            ExistingKeyError(
+                "Profile of type '$profile_type' for year '$year' and scenario '$scenario' already attached",
+            ),
+        )
+    end
+    asset.scenario_profiles[key] = profile_value
 
     return asset
 end
