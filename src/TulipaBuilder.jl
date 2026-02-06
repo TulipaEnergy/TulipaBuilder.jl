@@ -10,7 +10,7 @@ using TulipaIO: TulipaIO as TIO
 const AssetType = Symbol
 const ProfileType = Symbol
 const ScenarioType = Int
-const DefaultScenario = 1
+const DEFAULT_SCENARIO = 1
 const PerYear{T} = Dict{Int,T}
 const PerYears{T} = Dict{Tuple{Int,Int},T}
 const PerProfileType{T} = Dict{ProfileType,T}

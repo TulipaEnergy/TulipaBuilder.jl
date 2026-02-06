@@ -282,40 +282,19 @@ function attach_profile!(
     asset_name::KeyType,
     profile_type::ProfileType,
     year::Int,
-    profile_value::Vector,
+    profile_value::Vector;
+    scenario::Int = DEFAULT_SCENARIO,
 ) where {KeyType}
     add_or_update_year!(tulipa, year, length = length(profile_value), is_milestone = true)
     asset = tulipa.graph[asset_name]
-    attach_profile!(asset, profile_type, year, profile_value)
+    attach_profile!(asset, profile_type, year, profile_value; scenario = scenario)
     return tulipa
 end
 
 """
-    attach_profile!(tulipa_data, asset_name, profile_type, year, scenario, profile_value)
+    attach_profile!(tulipa_data, from_asset_name, to_asset_name, profile_type, year, profile_value; scenario=DEFAULT_SCENARIO)
 
-Attach the profile vector `profile_value` to the asset named `asset_name` of
-the type `profile_type` for the year `year` and scenario `scenario`.
-
-This will also inform the length of the year using the length of the `profile_value`.
-"""
-function attach_profile!(
-    tulipa::TulipaData{KeyType},
-    asset_name::KeyType,
-    profile_type::ProfileType,
-    year::Int,
-    scenario::ScenarioType,
-    profile_value::Vector,
-) where {KeyType}
-    add_or_update_year!(tulipa, year, length = length(profile_value), is_milestone = true)
-    asset = tulipa.graph[asset_name]
-    attach_profile!(asset, profile_type, year, scenario, profile_value)
-    return tulipa
-end
-
-"""
-    attach_profile!(tulipa_data, from_asset_name, to_asset_name, profile_type, year, profile_value)
-
-Attach the profile vector `profile_value` to the asset named `asset_name` of
+Attach the profile vector `profile_value` to the flow between `from_asset_name` and `to_asset_name` of
 the type `profile_type` for the year `year`.
 
 This will also inform the length of the year using the length of the `profile_value`.
