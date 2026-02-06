@@ -442,6 +442,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         "CREATE OR REPLACE TABLE profiles (
             profile_name VARCHAR,
             year INT64,
+            scenario INT64,
             timestep INT64,
             value DOUBLE,
         )",
@@ -458,11 +459,18 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
     )
     for asset_name in MetaGraphsNext.labels(tulipa.graph)
         asset = tulipa.graph[asset_name]
-        for ((profile_type, year), profile_value) in asset.profiles
+        # Track which profiles have been added to assets_profiles (profile_type, year)
+        seen_profile_keys = Set{Tuple{ProfileType,Int}}()
+
+        # Handle all profiles (stored with 3-tuple key: profile_type, year, scenario)
+        for ((profile_type, year, scenario), profile_value) in asset.profiles
             profile_name = "$asset_name-$profile_type-$year"
+
+            # Use DataFrame for efficient bulk insertion
             profiles_df = DataFrame(
                 profile_name = profile_name,
                 year = year,
+                scenario = scenario,
                 timestep = 1:length(profile_value),
                 value = profile_value,
             )
@@ -473,15 +481,20 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             )
             DuckDB.query(connection, "DROP VIEW tmp_profile")
 
-            DuckDB.query(
-                connection,
-                "INSERT INTO assets_profiles BY NAME (SELECT
-                    '$asset_name' AS asset,
-                    $year AS commission_year,
-                    '$profile_name' AS profile_name,
-                    '$profile_type' AS profile_type,
-                )",
-            )
+            # Add to assets_profiles only once per (profile_type, year) combination
+            profile_key = (profile_type, year)
+            if !(profile_key in seen_profile_keys)
+                push!(seen_profile_keys, profile_key)
+                DuckDB.query(
+                    connection,
+                    "INSERT INTO assets_profiles BY NAME (SELECT
+                        '$asset_name' AS asset,
+                        $year AS commission_year,
+                        '$profile_name' AS profile_name,
+                        '$profile_type' AS profile_type,
+                    )",
+                )
+            end
         end
     end
     # Table flows_profiles

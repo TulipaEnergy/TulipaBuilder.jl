@@ -61,6 +61,7 @@
             :profiles => DataFrame(
                 profile_name = String[],
                 year = Int[],
+                scenario = Int[],
                 timestep = Int[],
                 value = Float64[],
             ),
@@ -148,7 +149,7 @@ end
         ("ccgt", 2030, "ccgt-availability-2030", "availability"),
     )
     for (i, x) in enumerate(ccgt_profile)
-        push!(manual_data[:profiles], ("ccgt-availability-2030", 2030, i, x))
+        push!(manual_data[:profiles], ("ccgt-availability-2030", 2030, 1, i, x))
     end
 
     push!(manual_data[:year_data], (2030, 24, 1.0))
