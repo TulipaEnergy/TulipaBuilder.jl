@@ -59,3 +59,24 @@ end
     @test set_partition!(flow, 2030, 3, 4) === flow
     @test set_partition!(flow, 2030, 4, :explicit, "12;12") === flow
 end
+
+@testitem "API consistency for scenario attach_profile!" tags = [:unit, :fast, :api] begin
+    using TulipaBuilder: ExistingKeyError
+    # Test that attach_profile! returns the tulipa object for chaining
+    tulipa = TulipaData()
+    add_asset!(tulipa, "producer1", :producer)
+
+    @test attach_profile!(
+        tulipa,
+        "producer1",
+        :availability,
+        2030,
+        rand(24);
+        scenario = 1,
+    ) === tulipa
+
+    # Test that attach_profile! returns the asset object
+    asset = tulipa.graph["producer1"]
+    @test attach_profile!(asset, :availability, 2031, rand(24); scenario = 1) === asset
+
+end

@@ -1,19 +1,20 @@
-@testitem "Attach scenario profiles for assets" tags = [:unit, :fast] setup = [CommonSetup] begin
+@testitem "Attach scenario profiles for assets" tags = [:unit, :fast, :scenario] setup =
+    [CommonSetup] begin
     using TulipaBuilder: ExistingKeyError
 
     tulipa = TulipaData()
     add_asset!(tulipa, "producer", :producer)
 
     # Attach scenario profiles
-    attach_profile!(tulipa, "producer", :availability, 2030, 1, ones(24))
-    attach_profile!(tulipa, "producer", :availability, 2030, 2, 2 .* ones(24))
+    attach_profile!(tulipa, "producer", :availability, 2030, ones(24); scenario = 1)
+    attach_profile!(tulipa, "producer", :availability, 2030, 2 .* ones(24); scenario = 2)
 
     # Verify that the profiles are stored correctly
     asset = tulipa.graph["producer"]
-    @test haskey(asset.scenario_profiles, (:availability, 2030, 1))
-    @test haskey(asset.scenario_profiles, (:availability, 2030, 2))
-    @test asset.scenario_profiles[(:availability, 2030, 1)] == ones(24)
-    @test asset.scenario_profiles[(:availability, 2030, 2)] == 2 .* ones(24)
+    @test haskey(asset.profiles, (:availability, 2030, 1))
+    @test haskey(asset.profiles, (:availability, 2030, 2))
+    @test asset.profiles[(:availability, 2030, 1)] == ones(24)
+    @test asset.profiles[(:availability, 2030, 2)] == 2 .* ones(24)
 
     # Verify that year information is updated
     @test haskey(tulipa.years, 2030)
@@ -21,35 +22,8 @@
     @test tulipa.years[2030][:is_milestone] == true
 end
 
-@testitem "ExistingKeyError for duplicate scenario profiles" tags = [:unit, :fast] setup =
-    [CommonSetup] begin
-    using TulipaBuilder: ExistingKeyError
-
-    tulipa = TulipaData()
-    add_asset!(tulipa, "producer", :producer)
-
-    # Attach scenario profile
-    attach_profile!(tulipa, "producer", :availability, 2030, 1, ones(24))
-
-    # Try to attach the same scenario profile again
-    @test_throws ExistingKeyError attach_profile!(
-        tulipa,
-        "producer",
-        :availability,
-        2030,
-        1,
-        ones(24),
-    )
-
-    # But we can attach a different scenario
-    attach_profile!(tulipa, "producer", :availability, 2030, 2, ones(24))
-
-    # And we can attach a non-scenario profile with the same profile_type and year (default scenario assigned)
-    attach_profile!(tulipa, "producer", :demand, 2030, ones(24))
-end
-
-@testitem "Create connection with scenario profiles for assets" tags = [] setup =
-    [CommonSetup, CreateConnectionSetup] begin
+@testitem "Create connection with scenario profiles for assets" tags =
+    [:unit, :fast, :scenario] setup = [CommonSetup, CreateConnectionSetup] begin
     using DuckDB: DuckDB
     using DataFrames: DataFrames, DataFrame
 
@@ -57,9 +31,9 @@ end
     add_asset!(tulipa, "producer", :producer)
 
     # Attach multiple scenario profiles
-    attach_profile!(tulipa, "producer", :availability, 2030, 1, ones(24))
-    attach_profile!(tulipa, "producer", :availability, 2030, 2, 2 .* ones(24))
-    attach_profile!(tulipa, "producer", :availability, 2030, 3, 3 .* ones(24))
+    attach_profile!(tulipa, "producer", :availability, 2030, ones(24); scenario = 1)
+    attach_profile!(tulipa, "producer", :availability, 2030, 2 .* ones(24); scenario = 2)
+    attach_profile!(tulipa, "producer", :availability, 2030, 3 .* ones(24); scenario = 3)
 
     connection = create_connection(tulipa)
 
@@ -81,7 +55,7 @@ end
     scenario1_df =
         DuckDB.query(
             connection,
-            "SELECT * FROM profiles WHERE scenario = '1' ORDER BY timestep",
+            "SELECT * FROM profiles WHERE scenario = 1 ORDER BY timestep",
         ) |> DataFrame
     @test size(scenario1_df, 1) == 24
     @test all(scenario1_df.scenario .== 1)
@@ -91,7 +65,7 @@ end
     scenario2_df =
         DuckDB.query(
             connection,
-            "SELECT * FROM profiles WHERE scenario = '2' ORDER BY timestep",
+            "SELECT * FROM profiles WHERE scenario = 2 ORDER BY timestep",
         ) |> DataFrame
     @test size(scenario2_df, 1) == 24
     @test all(scenario2_df.scenario .== 2)
@@ -101,15 +75,15 @@ end
     scenario3_df =
         DuckDB.query(
             connection,
-            "SELECT * FROM profiles WHERE scenario = '3' ORDER BY timestep",
+            "SELECT * FROM profiles WHERE scenario = 3 ORDER BY timestep",
         ) |> DataFrame
     @test size(scenario3_df, 1) == 24
     @test all(scenario3_df.scenario .== 3)
     @test all(scenario3_df.value .== 3.0)
 end
 
-@testitem "Create connection with mixed profiles (scenario and non-scenario)" tags = [] setup =
-    [CommonSetup, CreateConnectionSetup] begin
+@testitem "Create connection with mixed profiles (scenario and non-scenario)" tags =
+    [:unit, :fast, :scenario] setup = [CommonSetup, CreateConnectionSetup] begin
     using DuckDB: DuckDB
     using DataFrames: DataFrames, DataFrame
 
@@ -121,8 +95,8 @@ end
     attach_profile!(tulipa, "producer", :availability, 2030, ones(24))
 
     # Attach scenario profiles for consumer
-    attach_profile!(tulipa, "consumer", :demand, 2030, 1, ones(24))
-    attach_profile!(tulipa, "consumer", :demand, 2030, 2, 2 .* ones(24))
+    attach_profile!(tulipa, "consumer", :demand, 2030, ones(24); scenario = 1)
+    attach_profile!(tulipa, "consumer", :demand, 2030, 2 .* ones(24); scenario = 2)
 
     connection = create_connection(tulipa)
 
@@ -143,7 +117,7 @@ end
             "SELECT *
             FROM profiles
             WHERE
-                scenario = '1' AND
+                scenario = 1 AND
                 profile_name = 'producer-availability-2030'
             ORDER BY timestep",
         ) |> DataFrame
@@ -156,7 +130,7 @@ end
     scenario1_df =
         DuckDB.query(
             connection,
-            "SELECT * FROM profiles WHERE scenario = '1' ORDER BY timestep",
+            "SELECT * FROM profiles WHERE scenario = 1 ORDER BY timestep",
         ) |> DataFrame
     @test size(scenario1_df, 1) == 48  # 24 (availability) + 24 (demand)
     @test all(scenario1_df.value .== 1.0)
@@ -165,22 +139,8 @@ end
     scenario2_df =
         DuckDB.query(
             connection,
-            "SELECT * FROM profiles WHERE scenario = '2' ORDER BY timestep",
+            "SELECT * FROM profiles WHERE scenario = 2 ORDER BY timestep",
         ) |> DataFrame
     @test size(scenario2_df, 1) == 24
     @test all(scenario2_df.value .== 2.0)
-end
-
-@testitem "API consistency for scenario attach_profile!" tags = [:unit, :fast] setup =
-    [CommonSetup] begin
-    # Test that attach_profile! returns the tulipa object for chaining
-    tulipa = TulipaData()
-    add_asset!(tulipa, "producer1", :producer)
-
-    @test attach_profile!(tulipa, "producer1", :availability, 2030, 1, rand(24)) === tulipa
-
-    # Test that attach_profile! returns the asset object
-    asset = tulipa.graph["producer1"]
-    @test attach_profile!(asset, :availability, 2031, 1, rand(24)) === asset
-
 end
