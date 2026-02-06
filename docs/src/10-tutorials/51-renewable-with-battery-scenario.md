@@ -54,7 +54,7 @@ plt = plot()
 grouped = groupby(df, :scenario)
 linestyles = [:solid, :dash, :dot, :dashdot]
 for (i, scenario_df) in enumerate(grouped)
-    scenario_name = scenario_df.scenario[1]
+    scenario_id = scenario_df.scenario[1]
     ls = linestyles[mod1(i, length(linestyles))]
     plot!(
         plt,
@@ -62,7 +62,7 @@ for (i, scenario_df) in enumerate(grouped)
         c = :orange,
         lw = 2,
         alpha = 0.7,
-        label = "solar ($scenario_name)",
+        label = "solar ($scenario_id)",
         linestyle = ls,
     )
     plot!(
@@ -71,7 +71,7 @@ for (i, scenario_df) in enumerate(grouped)
         c = :green,
         lw = 2,
         alpha = 0.7,
-        label = "demand ($scenario_name)",
+        label = "demand ($scenario_id)",
         linestyle = ls,
     )
 end
@@ -88,17 +88,17 @@ plt
 
 Now, let's attach the profiles to the solar and demand assets for each scenario.
 
-!!! note "Multiple dispatch in Julia"
-    The function `attach_profile!` has multiple methods to handle attaching the profiles with and without scenarios. Notice that in the loop below, we are using the method that includes the scenario name, so the profiles are attached to each scenario. If we had used the method without the scenario name, the profiles would have been attached to a default scenario (with value `1`), and thus shared across all scenarios. For and example of attaching profiles without scenarios, please check the tutorial [Basic example with renewable producer and battery](@ref basic_renewable_battery). Please check the [reference](@ref reference) section for more information about this function.
+!!! tip "Use keyword `scenario` when attaching profiles to assets for different scenarios"
+    The function `attach_profile!` has a keyword `scenario` to specify the scenario for which the profile is attached. Notice that in the loop below, we are adding profiles for each scenario in the keyword, so the profiles are attached to each scenario. If we don't pass the keyword `scenario`, the profiles would have been attached to a default scenario (with value `1`). For and example of attaching profiles without scenarios, please check the tutorial [Basic example with renewable producer and battery](@ref basic_renewable_battery). Please check the [reference](@ref reference) section for more information about this function.
 
 ```@example scenarios
 year = 2030
 for scenario_df in grouped
-    scenario_name = scenario_df.scenario[1]
+    scenario_id = scenario_df.scenario[1]
     solar_profile = Vector(scenario_df[!, "solar"])
     demand_profile = Vector(scenario_df[!, "demand"])
-    attach_profile!(tulipa, "solar", :availability, year, scenario_name, solar_profile)
-    attach_profile!(tulipa, "demand", :demand, year, scenario_name, demand_profile)
+    attach_profile!(tulipa, "solar", :availability, year, solar_profile; scenario = scenario_id)
+    attach_profile!(tulipa, "demand", :demand, year, demand_profile; scenario = scenario_id)
 end
 ```
 
