@@ -292,7 +292,7 @@ function attach_profile!(
 end
 
 """
-    attach_profile!(tulipa_data, from_asset_name, to_asset_name, profile_type, year, profile_value; scenario=DEFAULT_SCENARIO)
+    attach_profile!(tulipa_data, from_asset_name, to_asset_name, profile_type, year, profile_value)
 
 Attach the profile vector `profile_value` to the flow between `from_asset_name` and `to_asset_name` of
 the type `profile_type` for the year `year`.
