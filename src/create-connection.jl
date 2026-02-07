@@ -518,11 +518,13 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         )
         for (from_asset_name, to_asset_name) in MetaGraphsNext.edge_labels(tulipa.graph)
             flow = tulipa.graph[from_asset_name, to_asset_name]
-            for ((profile_type, year), profile_value) in flow.profiles
+            seen_profile_keys = Set{Tuple{ProfileType,Int}}()
+            for ((profile_type, year, scenario), profile_value) in flow.profiles
                 profile_name = "$from_asset_name-$to_asset_name-$profile_type-$year"
                 profiles_df = DataFrame(
                     profile_name = profile_name,
                     year = year,
+                    scenario = scenario,
                     timestep = 1:length(profile_value),
                     value = profile_value,
                 )
@@ -533,16 +535,20 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
                 )
                 DuckDB.query(connection, "DROP VIEW tmp_profile")
 
-                DuckDB.query(
-                    connection,
-                    "INSERT INTO flows_profiles BY NAME (SELECT
-                        '$from_asset_name' AS from_asset,
-                        '$to_asset_name' AS to_asset,
-                        $year AS year,
-                        '$profile_name' AS profile_name,
-                        '$profile_type' AS profile_type,
-                    )",
-                )
+                profile_key = (profile_type, year)
+                if !(profile_key in seen_profile_keys)
+                    push!(seen_profile_keys, profile_key)
+                    DuckDB.query(
+                        connection,
+                        "INSERT INTO flows_profiles BY NAME (SELECT
+                            '$from_asset_name' AS from_asset,
+                            '$to_asset_name' AS to_asset,
+                            $year AS year,
+                            '$profile_name' AS profile_name,
+                            '$profile_type' AS profile_type,
+                        )",
+                    )
+                end
             end
         end
     end

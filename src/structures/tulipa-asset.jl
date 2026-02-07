@@ -12,7 +12,7 @@ mutable struct TulipaAsset{KeyType}
     milestone_year_data::PerYear{Dict{Symbol,Any}}
     both_years_data::PerYears{Dict{Symbol,Any}}
 
-    profiles::Dict{Tuple{ProfileType,Int,Int},Vector{Float64}}
+    profiles::Dict{Tuple{ProfileType,Int,ScenarioType},Vector{Float64}}
 
     partitions::Dict{Tuple{Int,Int},Dict{Symbol,Any}}
 
