@@ -144,3 +144,165 @@ end
     @test size(scenario2_df, 1) == 24
     @test all(scenario2_df.value .== 2.0)
 end
+
+@testitem "Attach profiles for flows" tags = [:unit, :fast, :scenario] setup = [CommonSetup] begin
+    using TulipaBuilder: ExistingKeyError
+
+    tulipa = TulipaData()
+    add_asset!(tulipa, "producer", :producer)
+    add_asset!(tulipa, "consumer", :consumer)
+    add_flow!(tulipa, "producer", "consumer")
+
+    # Attach flow profile
+    attach_profile!(tulipa, "producer", "consumer", :inflows, 2030, ones(24))
+
+    # Verify that the profile is stored correctly (default scenario = 1)
+    flow = tulipa.graph["producer", "consumer"]
+    @test haskey(flow.profiles, (:inflows, 2030, 1))
+    @test flow.profiles[(:inflows, 2030, 1)] == ones(24)
+
+    # Verify that year information is updated
+    @test haskey(tulipa.years, 2030)
+    @test tulipa.years[2030][:length] == 24
+    @test tulipa.years[2030][:is_milestone] == true
+
+    # Verify duplicate flow profile throws error
+    @test_throws ExistingKeyError attach_profile!(
+        tulipa,
+        "producer",
+        "consumer",
+        :inflows,
+        2030,
+        ones(24),
+    )
+end
+
+@testitem "Attach scenario profiles for flows" tags = [:unit, :fast, :scenario] setup =
+    [CommonSetup] begin
+    using TulipaBuilder: ExistingKeyError
+
+    tulipa = TulipaData()
+    add_asset!(tulipa, "producer", :producer)
+    add_asset!(tulipa, "consumer", :consumer)
+    add_flow!(tulipa, "producer", "consumer")
+
+    # Attach multiple scenario profiles for a flow
+    attach_profile!(tulipa, "producer", "consumer", :inflows, 2030, ones(24); scenario = 1)
+    attach_profile!(
+        tulipa,
+        "producer",
+        "consumer",
+        :inflows,
+        2030,
+        2 .* ones(24);
+        scenario = 2,
+    )
+
+    # Verify that the profiles are stored correctly
+    flow = tulipa.graph["producer", "consumer"]
+    @test haskey(flow.profiles, (:inflows, 2030, 1))
+    @test haskey(flow.profiles, (:inflows, 2030, 2))
+    @test flow.profiles[(:inflows, 2030, 1)] == ones(24)
+    @test flow.profiles[(:inflows, 2030, 2)] == 2 .* ones(24)
+
+    # Verify that duplicate scenario throws error
+    @test_throws ExistingKeyError attach_profile!(
+        tulipa,
+        "producer",
+        "consumer",
+        :inflows,
+        2030,
+        ones(24);
+        scenario = 1,
+    )
+end
+
+@testitem "Create connection with flow profiles" tags = [:unit, :fast, :scenario] setup =
+    [CommonSetup, CreateConnectionSetup] begin
+    using DuckDB: DuckDB
+    using DataFrames: DataFrames, DataFrame
+
+    tulipa = TulipaData()
+    add_asset!(tulipa, "producer", :producer)
+    add_asset!(tulipa, "consumer", :consumer)
+    add_flow!(tulipa, "producer", "consumer")
+
+    # Attach flow profile
+    attach_profile!(tulipa, "producer", "consumer", :inflows, 2030, ones(24))
+
+    connection = create_connection(tulipa)
+
+    # Check that flows_profiles table is created with one entry
+    flows_profiles_df =
+        DuckDB.query(connection, "SELECT * FROM flows_profiles") |> DataFrame
+    @test size(flows_profiles_df, 1) == 1
+    @test flows_profiles_df.from_asset[1] == "producer"
+    @test flows_profiles_df.to_asset[1] == "consumer"
+    @test flows_profiles_df.profile_type[1] == "inflows"
+
+    # Check that profiles table has the flow profile data with default scenario
+    profiles_df =
+        DuckDB.query(
+            connection,
+            "SELECT * FROM profiles WHERE profile_name = 'producer-consumer-inflows-2030' ORDER BY timestep",
+        ) |> DataFrame
+    @test size(profiles_df, 1) == 24
+    @test all(profiles_df.value .== 1.0)
+    @test all(profiles_df.scenario .== 1)
+end
+
+@testitem "Create connection with mixed asset scenario profiles and flow profiles" tags =
+    [:unit, :fast, :scenario] setup = [CommonSetup, CreateConnectionSetup] begin
+    using DuckDB: DuckDB
+    using DataFrames: DataFrames, DataFrame
+
+    tulipa = TulipaData()
+    add_asset!(tulipa, "producer", :producer)
+    add_asset!(tulipa, "consumer", :consumer)
+    add_flow!(tulipa, "producer", "consumer")
+
+    # Attach asset profiles with scenarios
+    attach_profile!(tulipa, "producer", :availability, 2030, ones(24); scenario = 1)
+    attach_profile!(tulipa, "producer", :availability, 2030, 2 .* ones(24); scenario = 2)
+
+    # Attach flow profile (uses default scenario = 1)
+    attach_profile!(tulipa, "producer", "consumer", :inflows, 2030, 3 .* ones(24))
+
+    connection = create_connection(tulipa)
+
+    # Check assets_profiles has one entry
+    assets_profiles_df =
+        DuckDB.query(connection, "SELECT * FROM assets_profiles") |> DataFrame
+    @test size(assets_profiles_df, 1) == 1
+
+    # Check flows_profiles has one entry
+    flows_profiles_df =
+        DuckDB.query(connection, "SELECT * FROM flows_profiles") |> DataFrame
+    @test size(flows_profiles_df, 1) == 1
+
+    # Check profiles table has all entries
+    profiles_df = DuckDB.query(connection, "SELECT * FROM profiles") |> DataFrame
+    @test size(profiles_df, 1) == 24 * 2 + 24  # 2 asset scenarios + 1 flow profile
+
+    # Asset profiles should have scenario values
+    asset_profiles_df =
+        DuckDB.query(
+            connection,
+            "SELECT * FROM profiles WHERE profile_name = 'producer-availability-2030' ORDER BY scenario, timestep",
+        ) |> DataFrame
+    @test size(asset_profiles_df, 1) == 48
+    @test all(asset_profiles_df.scenario[1:24] .== 1)
+    @test all(asset_profiles_df.value[1:24] .== 1.0)
+    @test all(asset_profiles_df.scenario[25:48] .== 2)
+    @test all(asset_profiles_df.value[25:48] .== 2.0)
+
+    # Flow profile should have default scenario = 1
+    flow_profiles_df =
+        DuckDB.query(
+            connection,
+            "SELECT * FROM profiles WHERE profile_name = 'producer-consumer-inflows-2030' ORDER BY timestep",
+        ) |> DataFrame
+    @test size(flow_profiles_df, 1) == 24
+    @test all(flow_profiles_df.value .== 3.0)
+    @test all(flow_profiles_df.scenario .== 1)
+end
