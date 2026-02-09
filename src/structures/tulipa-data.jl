@@ -7,7 +7,6 @@ export TulipaData,
     attach_both_years_data!,
     attach_profile!,
     add_asset_group!,
-    attach_profile!,
     set_partition!
 
 """
@@ -305,11 +304,12 @@ function attach_profile!(
     to_asset_name::KeyType,
     profile_type::ProfileType,
     year::Int,
-    profile_value::Vector,
+    profile_value::Vector;
+    scenario::Int = DEFAULT_SCENARIO,
 ) where {KeyType}
     add_or_update_year!(tulipa, year, length = length(profile_value), is_milestone = true)
     flow = tulipa.graph[from_asset_name, to_asset_name]
-    attach_profile!(flow, profile_type, year, profile_value)
+    attach_profile!(flow, profile_type, year, profile_value; scenario = scenario)
     return tulipa
 end
 
