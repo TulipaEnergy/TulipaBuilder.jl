@@ -109,7 +109,7 @@ jobs:
         with:
           pattern: results-*
       - name: Aggregate results
-        run: | # TODO: Can we move this to a script without having to actions/checkout everything?
+        run: |
           echo "## Downstream Results" >> results.md
           echo "" >> results.md
           echo "| Package name | Result |" >> results.md
