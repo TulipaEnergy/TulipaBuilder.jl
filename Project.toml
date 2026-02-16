@@ -1,6 +1,6 @@
 name = "TulipaBuilder"
 uuid = "05fe4dc7-9a58-53a4-b912-b5673d74e816"
-version = "0.1.5"
+version = "0.2.0"
 authors = ["Abel Soares Siqueira"]
 
 [workspace]
