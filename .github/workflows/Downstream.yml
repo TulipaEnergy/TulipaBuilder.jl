@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v6
       - id: set_matrix
         run: |
-          echo "matrix=$(jq -c '{include: [to_entries[] | {package: .key, user: .value.user, version: .value.version} + (.value.extra // {})]}' .github/downstream.json)" >> "$GITHUB_OUTPUT"
+          echo "matrix=$(jq -c '{include: [.[] | {package, user, version} + (.extra // {})]}' .github/downstream.json)" >> "$GITHUB_OUTPUT"
 
   test:
     needs: set_matrix

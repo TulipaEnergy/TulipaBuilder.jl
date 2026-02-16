@@ -1,22 +1,12 @@
-{
-  "Bob": {
-    "extra": {},
+[
+  {
+    "package": "TulipaEnergyModel",
     "user": "TulipaEnergy",
     "version": "stable"
   },
-  "TulipaBuilder": {
-    "extra": {},
+  {
+    "package": "TulipaEnergyModel",
     "user": "TulipaEnergy",
-    "version": "main"
-  },
-  "TulipaClustering": {
-    "extra": {},
-    "user": "TulipaEnergy",
-    "version": "main"
-  },
-  "TulipaEnergyModel": {
-    "extra": {},
-    "user": "TulipaEnergy",
-    "version": "stable"
+    "version": "latest"
   }
-}
+]
