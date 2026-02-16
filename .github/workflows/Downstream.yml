@@ -6,6 +6,9 @@ name: Downstream testing
 on:
   pull_request:
 
+permissions:
+  pull-requests: write
+
 jobs:
   set_matrix:
     runs-on: ubuntu-latest
@@ -36,6 +39,7 @@ jobs:
         with:
           repository: ${{ matrix.user }}/${{ matrix.package }}.jl
           fetch-tags: true
+          fetch-depth: 0
           path: downstream
       - run: ls downstream
       - name: "Checkout correct version"
