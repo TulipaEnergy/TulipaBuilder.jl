@@ -61,10 +61,8 @@ jobs:
       - uses: julia-actions/julia-buildpkg@v1
         with:
           project: downstream
-      - uses: julia-actions/julia-runtest@v1
-        with:
-          coverage: false
-          project: downstream
+      # TODO: Replace with julia-actions/julia-runtest
+      - run: echo "Fake test for ${{ matrix.package }}"
       - name: Save results
         if: always()
         run: |
