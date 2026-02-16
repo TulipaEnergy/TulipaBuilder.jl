@@ -54,23 +54,39 @@ jobs:
           git checkout "$GIT_TAG"
           echo "git_tag=$GIT_TAG" >> "$GITHUB_OUTPUT"
       - name: "pkg> develop"
+        id: develop
+        continue-on-error: true
         env:
           PROJECT: downstream
         run: |
           julia --project=$PROJECT -e 'using Pkg; Pkg.develop(PackageSpec(path="."))'
       - uses: julia-actions/julia-buildpkg@v1
+        id: buildpkg
+        if: steps.develop.outcome == 'success'
+        continue-on-error: true
         with:
           project: downstream
       - uses: julia-actions/julia-runtest@v1
+        id: test
+        if: steps.develop.outcome == 'success' && steps.buildpkg.outcome == 'success'
         with:
           coverage: false
           project: downstream
       - name: Save results
         if: always()
         run: |
+          if [ "${{ steps.develop.outcome }}" == "failure" ] || [ "${{ steps.buildpkg.outcome }}" == "failure" ]; then
+            STATUS="version_mismatch"
+          elif [ "${{ steps.test.outcome }}" == "success" ]; then
+            STATUS="success"
+          elif [ "${{ steps.test.outcome }}" == "failure" ]; then
+            STATUS="fail"
+          else
+            STATUS="error"
+          fi
           echo '{
             "package":"${{ matrix.package }}",
-            "status":"${{ job.status }}",
+            "status":"'"$STATUS"'",
             "git_tag":"${{ steps.checkout.outputs.git_tag }}",
             "job_url":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           }' > results.json
@@ -103,8 +119,12 @@ jobs:
             status=$(jq -r '.status' "$file")
             if [ "$status" == "success" ]; then
               badge="$git_tag-Pass-green"
+            elif [ "$status" == "fail" ]; then
+              badge="$git_tag-Fail-orange"
+            elif [ "$status" == "version_mismatch" ]; then
+              badge="$git_tag-Version%20Mismatch-yellow"
             else
-              badge="$git_tag-Fail-red"
+              badge="$git_tag-Error-red"
             fi
             badge="[![$status](https://img.shields.io/badge/$badge)]($job_url)"
             echo "| $package_name | $badge |" >> results.md
