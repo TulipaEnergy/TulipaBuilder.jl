@@ -1,0 +1,67 @@
+# Based on JuliaSmoothOptimizers' Breakage.yml and Flux.jl' Downstream.yml:
+# https://github.com/JuliaSmoothOptimizers/NLPModels.jl/blob/01b4d9f8d5e4ce6d2b529566605504845cbafd08/.github/workflows/breakage.yml
+# https://github.com/FluxML/Flux.jl/blob/ce4b8a081aec37d5f8144044a5a7940f47210551/.github/workflows/Downstream.yml
+name: Downstream testing
+
+on:
+  pull_request:
+
+jobs:
+  set_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set_matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v6
+      - id: set_matrix
+        run: |
+          echo "matrix=$(jq -c '{include: [to_entries[] | {package: .key, user: .value.user, version: .value.version} + (.value.extra // {})]}' .github/downstream.json)" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: set_matrix
+    if: needs.set_matrix.result == 'success' && needs.set_matrix.outputs.matrix != ''
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.set_matrix.outputs.matrix) }}
+
+    steps:
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: 1
+          arch: x64
+      - uses: actions/checkout@v6
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: actions/checkout@v6
+        with:
+          repository: ${{ matrix.user }}/${{ matrix.package }}.jl
+          fetch-tags: true
+          path: downstream
+      - name: "Checkout correct version"
+        id: checkout
+        env:
+          VERSION: ${{ matrix.version }}
+          DOWNSTREAM_PATH: downstream/${{ matrix.package }}.jl
+        run: |
+          cd "$DOWNSTREAM_PATH"
+          if [ "$VERSION" == "stable" ]; then
+            TAG=$(git tag -l "v*" --sort=-creatordate | head -n1)
+          elif [ -z "$VERSION" -o "$VERSION" == "latest" ]; then
+            TAG=main
+          else
+            TAG="$VERSION"
+          fi
+          git checkout "$TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+      - name: "pkg> develop"
+        env:
+          PROJECT: downstream/${{ matrix.package }}.jl
+        run: |
+          julia --project=$PROJECT -e 'using Pkg; Pkg.develop(PackageSpec(path="."))'
+      - uses: julia-actions/julia-buildpkg@v1
+        with:
+          project: downstream/${{ matrix.package }}.jl
+      - uses: julia-actions/julia-runtest@v1
+        with:
+          coverage: false
+          project: downstream/${{ matrix.package }}.jl

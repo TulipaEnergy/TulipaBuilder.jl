@@ -1,0 +1,14 @@
+{
+  "Fake": {
+    "extra": {
+      "group": "All"
+    },
+    "user": "Bob",
+    "version": "latest"
+  },
+  "TulipaEnergyModel": {
+    "extra": {},
+    "user": "TulipaEnergy",
+    "version": "stable"
+  }
+}
