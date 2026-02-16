@@ -37,13 +37,13 @@ jobs:
           repository: ${{ matrix.user }}/${{ matrix.package }}.jl
           fetch-tags: true
           path: downstream
+      - run: ls downstream
       - name: "Checkout correct version"
         id: checkout
         env:
           VERSION: ${{ matrix.version }}
-          DOWNSTREAM_PATH: downstream/${{ matrix.package }}.jl
         run: |
-          cd "$DOWNSTREAM_PATH"
+          cd downstream
           if [ "$VERSION" == "stable" ]; then
             TAG=$(git tag -l "v*" --sort=-creatordate | head -n1)
           elif [ -z "$VERSION" -o "$VERSION" == "latest" ]; then
@@ -55,13 +55,13 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
       - name: "pkg> develop"
         env:
-          PROJECT: downstream/${{ matrix.package }}.jl
+          PROJECT: downstream
         run: |
           julia --project=$PROJECT -e 'using Pkg; Pkg.develop(PackageSpec(path="."))'
       - uses: julia-actions/julia-buildpkg@v1
         with:
-          project: downstream/${{ matrix.package }}.jl
+          project: downstream
       - uses: julia-actions/julia-runtest@v1
         with:
           coverage: false
-          project: downstream/${{ matrix.package }}.jl
+          project: downstream
