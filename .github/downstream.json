@@ -2,21 +2,6 @@
   {
     "package": "TulipaEnergyModel",
     "user": "TulipaEnergy",
-    "version": "stable"
-  },
-  {
-    "package": "TulipaEnergyModel",
-    "user": "TulipaEnergy",
-    "version": "v0.19.1"
-  },
-  {
-    "package": "TulipaEnergyModel",
-    "user": "TulipaEnergy",
-    "version": "v0.18.2"
-  },
-  {
-    "package": "TulipaEnergyModel",
-    "user": "TulipaEnergy",
     "version": "latest"
   }
 ]
