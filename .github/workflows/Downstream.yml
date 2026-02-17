@@ -1,0 +1,202 @@
+# Based on JuliaSmoothOptimizers' Breakage.yml and Flux.jl' Downstream.yml:
+# https://github.com/JuliaSmoothOptimizers/NLPModels.jl/blob/01b4d9f8d5e4ce6d2b529566605504845cbafd08/.github/workflows/breakage.yml
+# https://github.com/FluxML/Flux.jl/blob/ce4b8a081aec37d5f8144044a5a7940f47210551/.github/workflows/Downstream.yml
+name: Downstream Testing
+
+on:
+  pull_request:
+
+permissions:
+  pull-requests: write
+
+jobs:
+  set_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set_matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v6
+      - id: set_matrix
+        run: |
+          echo "matrix=$(jq -c '{include: [.[] | {package, user, version} + (.extra // {})]}' .github/downstream.json)" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: set_matrix
+    if: needs.set_matrix.result == 'success' && needs.set_matrix.outputs.matrix != ''
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.set_matrix.outputs.matrix) }}
+
+    steps:
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: 1
+          arch: x64
+      - uses: actions/checkout@v6
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: actions/checkout@v6
+        with:
+          repository: ${{ matrix.user }}/${{ matrix.package }}.jl
+          fetch-tags: true
+          fetch-depth: 0
+          path: downstream
+      - run: ls downstream
+      - name: "Checkout correct version"
+        id: checkout
+        env:
+          VERSION: ${{ matrix.version }}
+        run: |
+          cd downstream
+          if [ "$VERSION" == "stable" ]; then
+            GIT_TAG=$(git tag -l "v*" --sort=-creatordate | head -n1)
+          elif [ -z "$VERSION" -o "$VERSION" == "latest" ]; then
+            GIT_TAG=main
+          else
+            GIT_TAG="$VERSION"
+          fi
+          git checkout "$GIT_TAG"
+          echo "git_tag=$GIT_TAG" >> "$GITHUB_OUTPUT"
+      - name: "pkg> develop"
+        id: develop
+        continue-on-error: true
+        env:
+          PROJECT: downstream
+        run: |
+          julia --project=$PROJECT -e 'using Pkg; Pkg.develop(PackageSpec(path="."))'
+      - uses: julia-actions/julia-buildpkg@v1
+        id: buildpkg
+        if: steps.develop.outcome == 'success'
+        continue-on-error: true
+        with:
+          project: downstream
+      - uses: julia-actions/julia-runtest@v1
+        id: test
+        if: steps.develop.outcome == 'success' && steps.buildpkg.outcome == 'success'
+        with:
+          coverage: false
+          project: downstream
+      - name: Save results
+        if: always()
+        run: |
+          if [ "${{ steps.develop.outcome }}" == "failure" ] || [ "${{ steps.buildpkg.outcome }}" == "failure" ]; then
+            STATUS="version_mismatch"
+          elif [ "${{ steps.test.outcome }}" == "success" ]; then
+            STATUS="success"
+          elif [ "${{ steps.test.outcome }}" == "failure" ]; then
+            STATUS="fail"
+          else
+            STATUS="error"
+          fi
+          echo '{
+            "package":"${{ matrix.package }}",
+            "status":"'"$STATUS"'",
+            "git_tag":"${{ steps.checkout.outputs.git_tag }}",
+            "job_url":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          }' > results.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results-${{ matrix.package }}-${{ steps.checkout.outputs.git_tag }}
+          path: results.json
+
+  comment:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: results-*
+      - name: Aggregate results
+        run: |
+          echo "## Downstream Testing Results
+
+          The table below helps prevent breakage in downstream packages.
+          There are four possible results: Pass, Fail, Version Mismatch, and Error.
+
+          - Pass: this PR does not break the downstream package.
+          - Fail: this PR breaks the downstream package.
+          - Version Mismatch: the version in this PR is not accepted by the compat bounds of the downstream package (in the given version).
+          - Error: Something else went wrong outside of the tests (possibly workflow related).
+
+          ### If all packages Pass
+
+          In this case, it is safe to release a new bugfix version (e.g., from 1.2.3 to 1.2.4) or minor version (e.g., from 0.1.5 to 0.1.6 or from 1.2.3 to 1.3.0).
+
+          ### If some packages Fail and that's not expected
+
+          In this case, this PR has some issue that needs to be investigated.
+          Check the tests log, or try to reproduce and fix the error locally:
+
+              # Go to the downstream package folder
+              pkg> activate path/to/this/package
+              pkg> update
+              pkg> test
+
+          Make sure that the `/path/to/this/package` has this package with the PR branch checked out.
+
+          After fixing the error, you should have a Pass state, or eventually you might conclude that this Fail is expected.
+
+          ### If some packages Fail and that is expected
+
+          In this case, you're introducing changes in this PR that will inevitably break some package.
+          This is a BREAKING CHANGE, and thus you will need to release a new version of this package.
+          One recommendation would be to do it now, introducing a new commit with the update of the version in the Project.toml.
+          This should be a major update (e.g., from 0.1.5 to 0.2.0 or from 1.2.3 to 2.0.0).
+
+          If you do that, then most packages or all packages will have a Version Mismatch status.
+
+          ### If you have Version Mismatch
+
+          Any package with a Version Mismatch has compat bounds that don't include this version of this package.
+          This is not an error, just a warning, and it can happen either because the downstream package has not had its compat updated yet (consider using dependabot), or that this PR introduces a version change.
+
+          Disclaimer: The Version Mismatch might be wrong, because it's a catch-all over the develop and build steps of the workflow.
+          If the mismatch is completely unexpected, check the logs.
+
+          ### If you have an Error
+
+          You have to investigate what happened. This is a catch-all for any other issue that appears in the workflow.
+          " >> results.md
+          echo "| Package name | Result |" >> results.md
+          echo "| ------------ | ------ |" >> results.md
+          count=0
+          for file in results-*/results.json
+          do
+            package_name=$(jq -r '.package' "$file")
+            git_tag=$(jq -r '.git_tag' "$file")
+            job_url=$(jq -r '.job_url' "$file")
+            status=$(jq -r '.status' "$file")
+            if [ "$status" == "success" ]; then
+              badge="$git_tag-Pass-green"
+            elif [ "$status" == "fail" ]; then
+              badge="$git_tag-Fail-orange"
+            elif [ "$status" == "version_mismatch" ]; then
+              badge="$git_tag-Version%20Mismatch-yellow"
+            else
+              badge="$git_tag-Error-red"
+            fi
+            badge="[![$status](https://img.shields.io/badge/$badge)]($job_url)"
+            echo "| $package_name | $badge |" >> results.md
+          done
+      - name: Print results.md to CI logs
+        run: cat results.md >> $GITHUB_STEP_SUMMARY
+      - name: Find Comment
+        # Only for non-forks:
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: peter-evans/find-comment@v4
+        id: downstream
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: Downstream Testing Results
+      - name: Comment on PR
+        # Only for non-forks:
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: peter-evans/create-or-update-comment@v5
+        with:
+          comment-id: ${{ steps.downstream.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: results.md
+          edit-mode: replace
