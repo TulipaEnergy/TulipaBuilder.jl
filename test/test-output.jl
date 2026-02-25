@@ -60,7 +60,7 @@
             ),
             :profiles => DataFrame(
                 profile_name = String[],
-                milestone_year = Int[],
+                year = Int[],
                 scenario = Int[],
                 timestep = Int[],
                 value = Float64[],
