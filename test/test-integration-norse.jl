@@ -509,7 +509,18 @@ end
         connection,
         "INSERT INTO rep_periods_data (rep_period, year, num_timesteps, resolution) VALUES (2, 2030, 24, 1.0)",
     )
+    # Temporary: installed TEM v0.20 expects 'year' in these tables; new TEM uses 'milestone_year'.
+    # Remove when TEM v0.21 is installed and TB dependency is updated.
+    for tbl in
+        ["assets_rep_periods_partitions", "flows_profiles", "flows_rep_periods_partitions"]
+        DuckDB.query(connection, "ALTER TABLE $tbl ADD COLUMN year INTEGER")
+        DuckDB.query(connection, "UPDATE $tbl SET year = milestone_year")
+    end
     TEM.populate_with_defaults!(connection)
+    for tbl in
+        ["assets_rep_periods_partitions", "flows_profiles", "flows_rep_periods_partitions"]
+        DuckDB.query(connection, "ALTER TABLE $tbl DROP COLUMN milestone_year")
+    end
 
     # Comparison
     norse_folder = joinpath(pkgdir(TEM), "test", "inputs", "Norse")
