@@ -441,7 +441,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         connection,
         "CREATE OR REPLACE TABLE profiles (
             profile_name VARCHAR,
-            year INT64,
+            milestone_year INT64,
             scenario INT64,
             timestep INT64,
             value DOUBLE,
@@ -469,7 +469,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             # Use DataFrame for efficient bulk insertion
             profiles_df = DataFrame(
                 profile_name = profile_name,
-                year = year,
+                milestone_year = year,
                 scenario = scenario,
                 timestep = 1:length(profile_value),
                 value = profile_value,
@@ -511,7 +511,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             "CREATE OR REPLACE TABLE flows_profiles (
                 from_asset VARCHAR,
                 to_asset VARCHAR,
-                year INT64,
+                milestone_year INT64,
                 profile_name VARCHAR,
                 profile_type VARCHAR,
             )",
@@ -543,7 +543,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
                         "INSERT INTO flows_profiles BY NAME (SELECT
                             '$from_asset_name' AS from_asset,
                             '$to_asset_name' AS to_asset,
-                            $year AS year,
+                            $year AS milestone_year,
                             '$profile_name' AS profile_name,
                             '$profile_type' AS profile_type,
                         )",
@@ -660,7 +660,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
     end
 
     # Table assets_rep_periods_partitions
-    columns = ["asset", "year", "rep_period", "specification", "partition"]
+    columns = ["asset", "milestone_year", "rep_period", "specification", "partition"]
     need_table = any(
         length(tulipa.graph[a].partitions) > 0 for a in MetaGraphsNext.labels(tulipa.graph)
     )
@@ -679,7 +679,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             end
             for ((year, rep_period), value) in partitions
                 query = "INSERT INTO assets_rep_periods_partitions BY NAME (SELECT '$asset_name' AS asset, "
-                query *= "$year as year, $rep_period as rep_period,"
+                query *= "$year as milestone_year, $rep_period as rep_period,"
                 specification = get(value, :specification, "uniform")
                 partition = value[:partition] # no default for partition
                 query *= _get_select_query_row(
@@ -698,7 +698,14 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         end
     end
 
-    columns = ["from_asset", "to_asset", "year", "rep_period", "specification", "partition"]
+    columns = [
+        "from_asset",
+        "to_asset",
+        "milestone_year",
+        "rep_period",
+        "specification",
+        "partition",
+    ]
     need_table = any(
         length(tulipa.graph[e...].partitions) > 0 for
         e in MetaGraphsNext.edge_labels(tulipa.graph)
@@ -718,7 +725,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             end
             for ((year, rep_period), value) in partitions
                 query = "INSERT INTO flows_rep_periods_partitions BY NAME (SELECT '$from_asset_name' AS from_asset, '$to_asset_name' AS to_asset,"
-                query *= "$year as year, $rep_period as rep_period, "
+                query *= "$year as milestone_year, $rep_period as rep_period, "
                 specification = get(value, :specification, "uniform")
                 partition = value[:partition] # no default for partition
                 query *= _get_select_query_row(
