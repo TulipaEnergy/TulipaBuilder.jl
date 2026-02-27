@@ -660,19 +660,16 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
     end
 
     # Table assets_rep_periods_partitions
+    columns = ["asset", "milestone_year", "rep_period", "specification", "partition"]
     need_table = any(
         length(tulipa.graph[a].partitions) > 0 for a in MetaGraphsNext.labels(tulipa.graph)
     )
     if need_table
-        DuckDB.query(
+        create_empty_table_from_schema!(
             connection,
-            "CREATE OR REPLACE TABLE assets_rep_periods_partitions (
-                asset VARCHAR,
-                milestone_year INTEGER,
-                rep_period INTEGER,
-                specification VARCHAR DEFAULT 'uniform',
-                partition VARCHAR DEFAULT '1',
-            )",
+            "assets_rep_periods_partitions",
+            TEM.schema["assets_rep_periods_partitions"],
+            columns,
         )
         for asset_name in MetaGraphsNext.labels(tulipa.graph)
             asset = tulipa.graph[asset_name]
@@ -701,21 +698,24 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         end
     end
 
+    columns = [
+        "from_asset",
+        "to_asset",
+        "milestone_year",
+        "rep_period",
+        "specification",
+        "partition",
+    ]
     need_table = any(
         length(tulipa.graph[e...].partitions) > 0 for
         e in MetaGraphsNext.edge_labels(tulipa.graph)
     )
     if need_table
-        DuckDB.query(
+        create_empty_table_from_schema!(
             connection,
-            "CREATE OR REPLACE TABLE flows_rep_periods_partitions (
-                from_asset VARCHAR,
-                to_asset VARCHAR,
-                milestone_year INTEGER,
-                rep_period INTEGER,
-                specification VARCHAR DEFAULT 'uniform',
-                partition VARCHAR DEFAULT '1',
-            )",
+            "flows_rep_periods_partitions",
+            TEM.schema["flows_rep_periods_partitions"],
+            columns,
         )
         for (from_asset_name, to_asset_name) in MetaGraphsNext.edge_labels(tulipa.graph)
             flow = tulipa.graph[from_asset_name, to_asset_name]
