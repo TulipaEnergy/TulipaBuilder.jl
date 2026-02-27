@@ -50,7 +50,7 @@
     connection = create_connection(tulipa)
 
     # External
-    TC.dummy_cluster!(connection)
+    TC.dummy_cluster!(connection; layout = TC.ProfilesTableLayout(year = :milestone_year))
     TEM.populate_with_defaults!(connection)
     ep = TEM.run_scenario(connection, show_log = false, model_file_name = "model.lp")
     @test JuMP.is_solved_and_feasible(ep.model)

@@ -501,13 +501,18 @@ end
     # External
     period_duration = 24
     num_rep_periods = 1
-    TC.cluster!(connection, period_duration, num_rep_periods)
+    TC.cluster!(
+        connection,
+        period_duration,
+        num_rep_periods;
+        layout = TC.ProfilesTableLayout(year = :milestone_year),
+    )
     # Manually changing the data because we can't currently cluster as Norse
     # See https://github.com/TulipaEnergy/TulipaClustering.jl/discussions/144
     DuckDB.query(connection, "UPDATE rep_periods_data SET num_timesteps = 168")
     DuckDB.query(
         connection,
-        "INSERT INTO rep_periods_data (rep_period, year, num_timesteps, resolution) VALUES (2, 2030, 24, 1.0)",
+        "INSERT INTO rep_periods_data (rep_period, milestone_year, num_timesteps, resolution) VALUES (2, 2030, 24, 1.0)",
     )
     TEM.populate_with_defaults!(connection)
 

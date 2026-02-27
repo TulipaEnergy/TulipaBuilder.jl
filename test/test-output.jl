@@ -12,7 +12,10 @@
     function create_and_get_data(tulipa; cluster = false, populate_with_defaults = false)
         connection = create_connection(tulipa)
         if cluster
-            TC.dummy_cluster!(connection)
+            TC.dummy_cluster!(
+                connection;
+                layout = TC.ProfilesTableLayout(year = :milestone_year),
+            )
         end
         if populate_with_defaults
             TEM.populate_with_defaults!(connection)
@@ -60,7 +63,7 @@
             ),
             :profiles => DataFrame(
                 profile_name = String[],
-                year = Int[],
+                milestone_year = Int[],
                 scenario = Int[],
                 timestep = Int[],
                 value = Float64[],

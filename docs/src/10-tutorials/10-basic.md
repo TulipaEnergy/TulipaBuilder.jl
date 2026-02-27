@@ -63,7 +63,7 @@ For completeness, here is rest of the pipeline for clustering, populating with d
 # Don't forget to cluster and populate with defaults before solving the problem
 using TulipaEnergyModel, TulipaClustering
 
-dummy_cluster!(connection)
+dummy_cluster!(connection; layout = TC.ProfilesTableLayout(year = :milestone_year))
 populate_with_defaults!(connection)
 ep = run_scenario(connection)
 ```
