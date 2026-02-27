@@ -108,7 +108,12 @@ end
     # External
     period_duration = 24
     num_rep_periods = 3
-    TC.cluster!(connection, period_duration, num_rep_periods)
+    TC.cluster!(
+        connection,
+        period_duration,
+        num_rep_periods;
+        layout = TC.ProfilesTableLayout(year = :milestone_year),
+    )
     TEM.populate_with_defaults!(connection)
 
     # Comparison

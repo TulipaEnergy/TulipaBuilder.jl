@@ -441,7 +441,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         connection,
         "CREATE OR REPLACE TABLE profiles (
             profile_name VARCHAR,
-            year INT64,
+            milestone_year INT64,
             scenario INT64,
             timestep INT64,
             value DOUBLE,
@@ -469,7 +469,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             # Use DataFrame for efficient bulk insertion
             profiles_df = DataFrame(
                 profile_name = profile_name,
-                year = year,
+                milestone_year = year,
                 scenario = scenario,
                 timestep = 1:length(profile_value),
                 value = profile_value,
@@ -523,7 +523,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
                 profile_name = "$from_asset_name-$to_asset_name-$profile_type-$year"
                 profiles_df = DataFrame(
                     profile_name = profile_name,
-                    year = year,
+                    milestone_year = year,
                     scenario = scenario,
                     timestep = 1:length(profile_value),
                     value = profile_value,
