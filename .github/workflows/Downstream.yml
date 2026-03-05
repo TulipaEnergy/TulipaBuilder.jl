@@ -62,8 +62,13 @@ jobs:
         continue-on-error: true
         env:
           PROJECT: downstream
+          DEVELOP_SUBPROJECT: ${{ matrix.develop_project }}
         run: |
-          julia --project=$PROJECT -e 'using Pkg; Pkg.develop(PackageSpec(path="."))'
+          if [ -n "$DEVELOP_SUBPROJECT" ]; then
+            julia --project=$PROJECT/$DEVELOP_SUBPROJECT -e 'using Pkg; Pkg.develop(PackageSpec(path="."))'
+          else
+            julia --project=$PROJECT -e 'using Pkg; Pkg.develop(PackageSpec(path="."))'
+          fi
       - uses: julia-actions/julia-buildpkg@v1
         id: buildpkg
         if: steps.develop.outcome == 'success'
