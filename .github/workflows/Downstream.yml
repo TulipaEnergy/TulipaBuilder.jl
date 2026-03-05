@@ -139,7 +139,7 @@ jobs:
               pkg> update
               pkg> test
 
-          Make sure that the `/path/to/this/package` has this package with the PR branch checked out.
+          Make sure that the \`/path/to/this/package\` has this package with the PR branch checked out.
 
           After fixing the error, you should have a Pass state, or eventually you might conclude that this Fail is expected.
 
@@ -166,6 +166,7 @@ jobs:
           " >> results.md
           echo "| Package name | Result |" >> results.md
           echo "| ------------ | ------ |" >> results.md
+          shopt -s nullglob
           count=0
           for file in results-*/results.json
           do
