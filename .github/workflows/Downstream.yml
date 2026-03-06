@@ -166,7 +166,7 @@ jobs:
           " >> results.md
           echo "| Package name | Result |" >> results.md
           echo "| ------------ | ------ |" >> results.md
-          shopt -s nullglob
+          shopt -s nullglob # when there is no match, forces `*` to expand to empty list
           count=0
           for file in results-*/results.json
           do
