@@ -260,11 +260,11 @@ end
         add_asset!(tulipa, asset, :storage; kwargs..., asset_extra_defaults...)
     end
 
-    # hub assets
+    # hub assets (TEM >= 0.21 uses consumer type instead of hub)
     add_asset!(
         tulipa,
         "Valhalla_E_balance",
-        :hub,
+        :consumer,
         investment_limit = 0.0,
         decommissionable = true,
         initial_storage_level = 0.0;

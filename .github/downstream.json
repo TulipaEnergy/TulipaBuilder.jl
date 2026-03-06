@@ -1,7 +1,10 @@
 [
   {
+    "extra": {
+      "develop_project": "test"
+    },
     "package": "TulipaEnergyModel",
     "user": "TulipaEnergy",
-    "version": "1086-verbose-year"
+    "version": "latest"
   }
 ]

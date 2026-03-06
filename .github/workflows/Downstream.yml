@@ -62,8 +62,13 @@ jobs:
         continue-on-error: true
         env:
           PROJECT: downstream
+          DEVELOP_SUBPROJECT: ${{ matrix.develop_project }}
         run: |
-          julia --project=$PROJECT -e 'using Pkg; Pkg.develop(PackageSpec(path="."))'
+          if [ -n "$DEVELOP_SUBPROJECT" ]; then
+            julia --project=$PROJECT/$DEVELOP_SUBPROJECT -e 'using Pkg; Pkg.develop(PackageSpec(path="."))'
+          else
+            julia --project=$PROJECT -e 'using Pkg; Pkg.develop(PackageSpec(path="."))'
+          fi
       - uses: julia-actions/julia-buildpkg@v1
         id: buildpkg
         if: steps.develop.outcome == 'success'
@@ -134,7 +139,7 @@ jobs:
               pkg> update
               pkg> test
 
-          Make sure that the `/path/to/this/package` has this package with the PR branch checked out.
+          Make sure that the \`/path/to/this/package\` has this package with the PR branch checked out.
 
           After fixing the error, you should have a Pass state, or eventually you might conclude that this Fail is expected.
 
@@ -161,6 +166,7 @@ jobs:
           " >> results.md
           echo "| Package name | Result |" >> results.md
           echo "| ------------ | ------ |" >> results.md
+          shopt -s nullglob # when there is no match, forces `*` to expand to empty list
           count=0
           for file in results-*/results.json
           do
