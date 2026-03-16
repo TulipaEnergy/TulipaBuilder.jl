@@ -99,7 +99,7 @@ jobs:
             "git_tag":"${{ steps.checkout.outputs.git_tag }}",
             "job_url":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           }' > results.json
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: results-${{ matrix.package }}-${{ steps.checkout.outputs.git_tag }}
