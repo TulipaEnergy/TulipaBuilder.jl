@@ -10,11 +10,12 @@
     attach_profile!(tulipa, "producer", :availability, 2030, 2 .* ones(24); scenario = 2)
 
     # Verify that the profiles are stored correctly
+    # Key is (profile_type, milestone_year, commission_year, scenario)
     asset = tulipa.graph["producer"]
-    @test haskey(asset.profiles, (:availability, 2030, 1))
-    @test haskey(asset.profiles, (:availability, 2030, 2))
-    @test asset.profiles[(:availability, 2030, 1)] == ones(24)
-    @test asset.profiles[(:availability, 2030, 2)] == 2 .* ones(24)
+    @test haskey(asset.profiles, (:availability, 2030, 2030, 1))
+    @test haskey(asset.profiles, (:availability, 2030, 2030, 2))
+    @test asset.profiles[(:availability, 2030, 2030, 1)] == ones(24)
+    @test asset.profiles[(:availability, 2030, 2030, 2)] == 2 .* ones(24)
 
     # Verify that year information is updated
     @test haskey(tulipa.years, 2030)
@@ -157,9 +158,10 @@ end
     attach_profile!(tulipa, "producer", "consumer", :inflows, 2030, ones(24))
 
     # Verify that the profile is stored correctly (default scenario = 1)
+    # Key is (profile_type, milestone_year, commission_year, scenario)
     flow = tulipa.graph["producer", "consumer"]
-    @test haskey(flow.profiles, (:inflows, 2030, 1))
-    @test flow.profiles[(:inflows, 2030, 1)] == ones(24)
+    @test haskey(flow.profiles, (:inflows, 2030, 2030, 1))
+    @test flow.profiles[(:inflows, 2030, 2030, 1)] == ones(24)
 
     # Verify that year information is updated
     @test haskey(tulipa.years, 2030)
@@ -199,11 +201,12 @@ end
     )
 
     # Verify that the profiles are stored correctly
+    # Key is (profile_type, milestone_year, commission_year, scenario)
     flow = tulipa.graph["producer", "consumer"]
-    @test haskey(flow.profiles, (:inflows, 2030, 1))
-    @test haskey(flow.profiles, (:inflows, 2030, 2))
-    @test flow.profiles[(:inflows, 2030, 1)] == ones(24)
-    @test flow.profiles[(:inflows, 2030, 2)] == 2 .* ones(24)
+    @test haskey(flow.profiles, (:inflows, 2030, 2030, 1))
+    @test haskey(flow.profiles, (:inflows, 2030, 2030, 2))
+    @test flow.profiles[(:inflows, 2030, 2030, 1)] == ones(24)
+    @test flow.profiles[(:inflows, 2030, 2030, 2)] == 2 .* ones(24)
 
     # Verify that duplicate scenario throws error
     @test_throws ExistingKeyError attach_profile!(

@@ -12,7 +12,7 @@ mutable struct TulipaAsset{KeyType}
     milestone_year_data::PerYear{Dict{Symbol,Any}}
     both_years_data::PerYears{Dict{Symbol,Any}}
 
-    profiles::Dict{Tuple{ProfileType,Int,ScenarioType},Vector{Float64}}
+    profiles::Dict{Tuple{ProfileType,Int,Int,ScenarioType},Vector{Float64}}
 
     partitions::Dict{Tuple{Int,Int},Dict{Symbol,Any}}
 
@@ -159,22 +159,24 @@ function attach_both_years_data!(
 end
 
 """
-    attach_profile!(asset::TulipaAsset, profile_type, year, profile_value; scenario=DEFAULT_SCENARIO)
+    attach_profile!(asset::TulipaAsset, profile_type, milestone_year, profile_value; commission_year=milestone_year, scenario=DEFAULT_SCENARIO)
 
 Internal version of `attach_profile!` acting directly on a `TulipaAsset` object.
+The `commission_year` defaults to `milestone_year` when not specified.
 """
 function attach_profile!(
     asset::TulipaAsset,
     profile_type::ProfileType,
-    year::Int,
+    milestone_year::Int,
     profile_value::Vector;
+    commission_year::Int = milestone_year,
     scenario::Int = DEFAULT_SCENARIO,
 )
-    key = (profile_type, year, scenario)
+    key = (profile_type, milestone_year, commission_year, scenario)
     if haskey(asset.profiles, key)
         throw(
             ExistingKeyError(
-                "Profile of type '$profile_type' for year '$year' and scenario '$scenario' already attached",
+                "Profile of type '$profile_type' for milestone_year '$milestone_year', commission_year '$commission_year' and scenario '$scenario' already attached",
             ),
         )
     end

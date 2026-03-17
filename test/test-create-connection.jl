@@ -12,7 +12,7 @@ end
 
     tulipa = TulipaData()
     add_asset!(tulipa, "producer", :producer, capacity = 1.0)
-    add_or_update_year!(tulipa, 2030, length = 24)
+    add_or_update_year!(tulipa, 2030, length = 24, is_milestone = true)
     connection = create_connection(tulipa)
     @test get_non_empty_tables(connection) == [MIN_ASSET_TABLES; "year_data"]
 end
@@ -30,7 +30,7 @@ end
     add_asset!(tulipa, "producer", :producer)
     add_asset!(tulipa, "consumer", :consumer)
     add_flow!(tulipa, "producer", "consumer")
-    add_or_update_year!(tulipa, 2030, length = 24)
+    add_or_update_year!(tulipa, 2030, length = 24, is_milestone = true)
     connection = create_connection(tulipa)
     @test get_non_empty_tables(connection) ==
           [MIN_ASSET_TABLES; MIN_FLOW_TABLES; "year_data"]

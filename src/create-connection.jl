@@ -53,8 +53,11 @@ end
 Propagates keys from `asset` to `asset_milestone`, `asset_commission` and `asset_both`, to avoid explicitly attaching a global value.
 """
 function propagate_year_data!(tulipa)
+    # Only propagate to milestone years; non-milestone commission years must be set explicitly
+    milestone_years =
+        [year for (year, props) in tulipa.years if get(props, :is_milestone, false)]
+
     # Propagate from asset to asset_milestone and asset_commission
-    years = keys(tulipa.years)
     for asset_name in MetaGraphsNext.labels(tulipa.graph)
         asset = tulipa.graph[asset_name]
 
@@ -66,22 +69,27 @@ function propagate_year_data!(tulipa)
                 key => value for (key, value) in asset.basic_data if
                 haskey(TEM.schema[table_name], string(key))
             )
-            for year in years
+            for year in milestone_years
                 attach!(asset, year; on_conflict = :skip, relevant_keys...)
             end
         end
     end
 
     # Propagate from asset to asset_both
-    # TODO: This is limited to milestone_year=commission_year because otherwise I have no idea what to do
+    # Only for non-compact/non-semi-compact assets (compact/semi-compact manage their own vintages)
+    # Limited to milestone_year=commission_year
     for asset_name in MetaGraphsNext.labels(tulipa.graph)
         asset = tulipa.graph[asset_name]
+        investment_method = get(asset.basic_data, :investment_method, "none")
+        if investment_method in ("compact", "semi-compact")
+            continue
+        end
 
         relevant_keys = Dict(
             key => value for (key, value) in asset.basic_data if
             haskey(TEM.schema["asset_both"], string(key))
         )
-        for year in years
+        for year in milestone_years
             attach_both_years_data!(
                 asset,
                 year,
@@ -104,14 +112,14 @@ function propagate_year_data!(tulipa)
                 key => value for (key, value) in flow.basic_data if
                 haskey(TEM.schema[table_name], string(key))
             )
-            for year in years
+            for year in milestone_years
                 attach!(flow, year; on_conflict = :skip, relevant_keys...)
             end
         end
     end
 
     # Propagate from flow to flow_both
-    # Only transport flows are added
+    # Only transport flows are added, and only for milestone years
     for (from_asset_name, to_asset_name) in MetaGraphsNext.edge_labels(tulipa.graph)
         flow = tulipa.graph[from_asset_name, to_asset_name]
         if !get(flow.basic_data, :is_transport, false)
@@ -122,7 +130,7 @@ function propagate_year_data!(tulipa)
             key => value for (key, value) in flow.basic_data if
             haskey(TEM.schema["flow_both"], string(key))
         )
-        for year in years
+        for year in milestone_years
             attach_both_years_data!(flow, year, year; on_conflict = :skip, relevant_keys...)
         end
     end
@@ -459,17 +467,18 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
     )
     for asset_name in MetaGraphsNext.labels(tulipa.graph)
         asset = tulipa.graph[asset_name]
-        # Track which profiles have been added to assets_profiles (profile_type, year)
+        # Track which profiles have been added to assets_profiles (profile_type, commission_year)
         seen_profile_keys = Set{Tuple{ProfileType,Int}}()
 
-        # Handle all profiles (stored with 3-tuple key: profile_type, year, scenario)
-        for ((profile_type, year, scenario), profile_value) in asset.profiles
-            profile_name = "$asset_name-$profile_type-$year"
+        # Handle all profiles (stored with 4-tuple key: profile_type, milestone_year, commission_year, scenario)
+        for ((profile_type, milestone_year, commission_year, scenario), profile_value) in
+            asset.profiles
+            profile_name = "$asset_name-$profile_type-$commission_year"
 
             # Use DataFrame for efficient bulk insertion
             profiles_df = DataFrame(
                 profile_name = profile_name,
-                milestone_year = year,
+                milestone_year = milestone_year,
                 scenario = scenario,
                 timestep = 1:length(profile_value),
                 value = profile_value,
@@ -481,15 +490,15 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             )
             DuckDB.query(connection, "DROP VIEW tmp_profile")
 
-            # Add to assets_profiles only once per (profile_type, year) combination
-            profile_key = (profile_type, year)
+            # Add to assets_profiles only once per (profile_type, commission_year) combination
+            profile_key = (profile_type, commission_year)
             if !(profile_key in seen_profile_keys)
                 push!(seen_profile_keys, profile_key)
                 DuckDB.query(
                     connection,
                     "INSERT INTO assets_profiles BY NAME (SELECT
                         '$asset_name' AS asset,
-                        $year AS commission_year,
+                        $commission_year AS commission_year,
                         '$profile_name' AS profile_name,
                         '$profile_type' AS profile_type,
                     )",
@@ -519,11 +528,14 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         for (from_asset_name, to_asset_name) in MetaGraphsNext.edge_labels(tulipa.graph)
             flow = tulipa.graph[from_asset_name, to_asset_name]
             seen_profile_keys = Set{Tuple{ProfileType,Int}}()
-            for ((profile_type, year, scenario), profile_value) in flow.profiles
-                profile_name = "$from_asset_name-$to_asset_name-$profile_type-$year"
+            for (
+                (profile_type, milestone_year, commission_year, scenario),
+                profile_value,
+            ) in flow.profiles
+                profile_name = "$from_asset_name-$to_asset_name-$profile_type-$commission_year"
                 profiles_df = DataFrame(
                     profile_name = profile_name,
-                    milestone_year = year,
+                    milestone_year = milestone_year,
                     scenario = scenario,
                     timestep = 1:length(profile_value),
                     value = profile_value,
@@ -535,7 +547,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
                 )
                 DuckDB.query(connection, "DROP VIEW tmp_profile")
 
-                profile_key = (profile_type, year)
+                profile_key = (profile_type, commission_year)
                 if !(profile_key in seen_profile_keys)
                     push!(seen_profile_keys, profile_key)
                     DuckDB.query(
@@ -543,7 +555,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
                         "INSERT INTO flows_profiles BY NAME (SELECT
                             '$from_asset_name' AS from_asset,
                             '$to_asset_name' AS to_asset,
-                            $year AS milestone_year,
+                            $milestone_year AS milestone_year,
                             '$profile_name' AS profile_name,
                             '$profile_type' AS profile_type,
                         )",
@@ -573,13 +585,14 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         )
     end
 
-    # Complement the *-milestone and *-commission tables with missing *,year combinations
+    # Complement the *-milestone and *-commission tables with missing *,year combinations.
+    # Only milestone years are auto-filled; non-milestone commission years must be set explicitly.
     # TODO :Evaluate CREATE OR REPLACE alternative
     for t_prefix in (:asset, :flow), t_suffix in (:commission, :milestone)
         table_name = "$(t_prefix)_$(t_suffix)"
         year_col = "$(t_suffix)_year"
         main_cols = t_prefix == :asset ? [:asset] : [:from_asset, :to_asset]
-        where_is_milestone = t_suffix == :milestone ? "WHERE is_milestone" : ""
+        where_is_milestone = "WHERE is_milestone"
 
         cte_all_cols = join(("$t_prefix.$col" for col in main_cols), ", ")
         cte_all = "SELECT $cte_all_cols, year_data.year
@@ -612,7 +625,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         asset_name in MetaGraphsNext.labels(tulipa.graph)
     )
     where_investment_method = if has_investment_method_column
-        "WHERE asset.investment_method != 'compact'"
+        "WHERE asset.investment_method NOT IN ('compact', 'semi-compact')"
     else
         ""
     end
