@@ -254,6 +254,82 @@ end
     @test all(profiles_df.scenario .== 1)
 end
 
+@testitem "Attach profile with different commission_year for asset" tags =
+    [:unit, :fast, :scenario] setup = [CommonSetup] begin
+    using TulipaBuilder: ExistingKeyError
+
+    tulipa = TulipaData()
+    add_asset!(tulipa, "producer", :producer)
+
+    # Default: commission_year == milestone_year
+    attach_profile!(tulipa, "producer", :availability, 2030, ones(24))
+    # Explicit different commission_year
+    attach_profile!(
+        tulipa,
+        "producer",
+        :availability,
+        2030,
+        2 .* ones(24);
+        commission_year = 2025,
+    )
+
+    asset = tulipa.graph["producer"]
+    @test haskey(asset.profiles, (:availability, 2030, 2030, 1))  # default commission_year
+    @test haskey(asset.profiles, (:availability, 2030, 2025, 1))  # different commission_year
+    @test asset.profiles[(:availability, 2030, 2030, 1)] == ones(24)
+    @test asset.profiles[(:availability, 2030, 2025, 1)] == 2 .* ones(24)
+
+    # Duplicate with same commission_year throws
+    @test_throws ExistingKeyError attach_profile!(
+        tulipa,
+        "producer",
+        :availability,
+        2030,
+        ones(24);
+        commission_year = 2025,
+    )
+end
+
+@testitem "Attach profile with different commission_year for flow" tags =
+    [:unit, :fast, :scenario] setup = [CommonSetup] begin
+    using TulipaBuilder: ExistingKeyError
+
+    tulipa = TulipaData()
+    add_asset!(tulipa, "producer", :producer)
+    add_asset!(tulipa, "consumer", :consumer)
+    add_flow!(tulipa, "producer", "consumer")
+
+    # Default: commission_year == milestone_year
+    attach_profile!(tulipa, "producer", "consumer", :inflows, 2030, ones(24))
+    # Explicit different commission_year
+    attach_profile!(
+        tulipa,
+        "producer",
+        "consumer",
+        :inflows,
+        2030,
+        2 .* ones(24);
+        commission_year = 2025,
+    )
+
+    flow = tulipa.graph["producer", "consumer"]
+    @test haskey(flow.profiles, (:inflows, 2030, 2030, 1))  # default commission_year
+    @test haskey(flow.profiles, (:inflows, 2030, 2025, 1))  # different commission_year
+    @test flow.profiles[(:inflows, 2030, 2030, 1)] == ones(24)
+    @test flow.profiles[(:inflows, 2030, 2025, 1)] == 2 .* ones(24)
+
+    # Duplicate with same commission_year throws
+    @test_throws ExistingKeyError attach_profile!(
+        tulipa,
+        "producer",
+        "consumer",
+        :inflows,
+        2030,
+        ones(24);
+        commission_year = 2025,
+    )
+end
+
 @testitem "Create connection with mixed asset scenario profiles and flow profiles" tags =
     [:unit, :fast, :scenario] setup = [CommonSetup, CreateConnectionSetup] begin
     using DuckDB: DuckDB

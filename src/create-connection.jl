@@ -53,7 +53,7 @@ end
 Propagates keys from `asset` to `asset_milestone`, `asset_commission` and `asset_both`, to avoid explicitly attaching a global value.
 """
 function propagate_year_data!(tulipa)
-    # Only propagate to milestone years; non-milestone commission years must be set explicitly
+    # Milestone years: years marked as is_milestone
     milestone_years =
         [year for (year, props) in tulipa.years if get(props, :is_milestone, false)]
 
@@ -61,15 +61,21 @@ function propagate_year_data!(tulipa)
     for asset_name in MetaGraphsNext.labels(tulipa.graph)
         asset = tulipa.graph[asset_name]
 
-        for (table_name, attach!) in (
-            ("asset_milestone", attach_milestone_data!),
-            ("asset_commission", attach_commission_data!),
+        for (table_name, attach!, propagation_years) in (
+            ("asset_milestone", attach_milestone_data!, milestone_years),
+            # Commission tables: also fill in basic_data for commission years that already
+            # have explicit data, so users don't need to manually duplicate add_asset! values
+            (
+                "asset_commission",
+                attach_commission_data!,
+                union(milestone_years, keys(asset.commission_year_data)),
+            ),
         )
             relevant_keys = Dict(
                 key => value for (key, value) in asset.basic_data if
                 haskey(TEM.schema[table_name], string(key))
             )
-            for year in milestone_years
+            for year in propagation_years
                 attach!(asset, year; on_conflict = :skip, relevant_keys...)
             end
         end
@@ -104,15 +110,21 @@ function propagate_year_data!(tulipa)
     for (from_asset_name, to_asset_name) in MetaGraphsNext.edge_labels(tulipa.graph)
         flow = tulipa.graph[from_asset_name, to_asset_name]
 
-        for (table_name, attach!) in (
-            ("flow_milestone", attach_milestone_data!),
-            ("flow_commission", attach_commission_data!),
+        for (table_name, attach!, propagation_years) in (
+            ("flow_milestone", attach_milestone_data!, milestone_years),
+            # Commission tables: also fill in basic_data for commission years that already
+            # have explicit data, so users don't need to manually duplicate add_flow! values
+            (
+                "flow_commission",
+                attach_commission_data!,
+                union(milestone_years, keys(flow.commission_year_data)),
+            ),
         )
             relevant_keys = Dict(
                 key => value for (key, value) in flow.basic_data if
                 haskey(TEM.schema[table_name], string(key))
             )
-            for year in milestone_years
+            for year in propagation_years
                 attach!(flow, year; on_conflict = :skip, relevant_keys...)
             end
         end
@@ -586,7 +598,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
     end
 
     # Complement the *-milestone and *-commission tables with missing *,year combinations.
-    # Only milestone years are auto-filled; non-milestone commission years must be set explicitly.
+    # Only milestone years are auto-filled; commission years must be set explicitly.
     # TODO :Evaluate CREATE OR REPLACE alternative
     for t_prefix in (:asset, :flow), t_suffix in (:commission, :milestone)
         table_name = "$(t_prefix)_$(t_suffix)"

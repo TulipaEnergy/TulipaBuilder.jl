@@ -327,9 +327,9 @@ end
     attach_commission_data!(tulipa, "demand", "battery", 2030, producer_efficiency = 0.2)
     attach_commission_data!(tulipa, "ens", "demand", 2050, producer_efficiency = 0.4)
     attach_commission_data!(tulipa, "solar", "demand", 2030, producer_efficiency = 0.4)
-    # wind commission_year 2020 exists due to attach_both_years_data!(wind, 2020, 2030, ...);
-    # investment_cost=350.0 is not propagated for explicitly-attached commission entries, so set it here
-    attach_commission_data!(tulipa, "wind", "demand", 2020, investment_cost = 350.0)
+    # wind commission_year 2020 exists due to attach_both_years_data!(wind, 2020, 2030, ...).
+    # Registering this year triggers propagation of basic_data (e.g. investment_cost) from add_flow!
+    attach_commission_data!(tulipa, "wind", "demand", 2020)
     attach_commission_data!(tulipa, "wind", "demand", 2030, producer_efficiency = 0.3)
 
     ### flow_both data for ccgt→demand transport flow (from flow-both.csv)
