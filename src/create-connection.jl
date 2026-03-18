@@ -60,16 +60,12 @@ function propagate_year_data!(tulipa)
     # Propagate from asset to asset_milestone and asset_commission
     for asset_name in MetaGraphsNext.labels(tulipa.graph)
         asset = tulipa.graph[asset_name]
+        # Propagation to commission years will happen only for years that have data to propagate.
+        commission_years = union(milestone_years, keys(asset.commission_year_data))
 
         for (table_name, attach!, propagation_years) in (
             ("asset_milestone", attach_milestone_data!, milestone_years),
-            # Commission tables: also fill in basic_data for commission years that already
-            # have explicit data, so users don't need to manually duplicate add_asset! values
-            (
-                "asset_commission",
-                attach_commission_data!,
-                union(milestone_years, keys(asset.commission_year_data)),
-            ),
+            ("asset_commission", attach_commission_data!, commission_years),
         )
             relevant_keys = Dict(
                 key => value for (key, value) in asset.basic_data if
@@ -109,16 +105,12 @@ function propagate_year_data!(tulipa)
     # Propagate from flow to flow_commission and flow_milestone
     for (from_asset_name, to_asset_name) in MetaGraphsNext.edge_labels(tulipa.graph)
         flow = tulipa.graph[from_asset_name, to_asset_name]
+        # Propagation to commission years will happen only for years that have data to propagate.
+        commission_years = union(milestone_years, keys(flow.commission_year_data))
 
         for (table_name, attach!, propagation_years) in (
             ("flow_milestone", attach_milestone_data!, milestone_years),
-            # Commission tables: also fill in basic_data for commission years that already
-            # have explicit data, so users don't need to manually duplicate add_flow! values
-            (
-                "flow_commission",
-                attach_commission_data!,
-                union(milestone_years, keys(flow.commission_year_data)),
-            ),
+            ("flow_commission", attach_commission_data!, commission_years),
         )
             relevant_keys = Dict(
                 key => value for (key, value) in flow.basic_data if

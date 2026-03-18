@@ -1,5 +1,5 @@
 @testsnippet MultiYearFixes begin
-    # These are non-TEM-defaults that are constant across all years in the reference data
+    # These are non-TEM-defaults that are constant across almost all years in the reference data
     asset_extra_defaults = (
         # asset
         technical_lifetime = 15,            # default is 1 (overridden per-asset where needed)
