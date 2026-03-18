@@ -269,13 +269,13 @@ function attach_both_years_data!(
 end
 
 """
-    attach_profile!(tulipa_data, asset_name, profile_type, year, profile_value; commission_year=year, scenario=DEFAULT_SCENARIO)
+    attach_profile!(tulipa_data, asset_name, profile_type, milestone_year, profile_value; commission_year=milestone_year, scenario=DEFAULT_SCENARIO)
 
 Attach the profile vector `profile_value` to the asset named `asset_name` of
-the type `profile_type` for the milestone `year`.
+the type `profile_type` for the `milestone_year`.
 
-The `commission_year` defaults to `year` (the milestone year). When a different
-`commission_year` is given, the profile data is stored for the milestone `year`
+The `commission_year` defaults to `milestone_year`. When a different
+`commission_year` is given, the profile data is stored for the `milestone_year`
 but the `assets_profiles` table will use the given `commission_year`. The
 `commission_year` will NOT be marked as a milestone year.
 
@@ -285,35 +285,40 @@ function attach_profile!(
     tulipa::TulipaData{KeyType},
     asset_name::KeyType,
     profile_type::ProfileType,
-    year::Int,
+    milestone_year::Int,
     profile_value::Vector;
-    commission_year::Int = year,
+    commission_year::Int = milestone_year,
     scenario::Int = DEFAULT_SCENARIO,
 ) where {KeyType}
-    add_or_update_year!(tulipa, year, length = length(profile_value), is_milestone = true)
-    if commission_year != year
+    add_or_update_year!(
+        tulipa,
+        milestone_year,
+        length = length(profile_value),
+        is_milestone = true,
+    )
+    if commission_year != milestone_year
         add_or_update_year!(tulipa, commission_year)
     end
     asset = tulipa.graph[asset_name]
     attach_profile!(
         asset,
         profile_type,
-        year,
+        milestone_year,
         profile_value;
-        commission_year = commission_year,
-        scenario = scenario,
+        commission_year,
+        scenario,
     )
     return tulipa
 end
 
 """
-    attach_profile!(tulipa_data, from_asset_name, to_asset_name, profile_type, year, profile_value; commission_year=year, scenario=DEFAULT_SCENARIO)
+    attach_profile!(tulipa_data, from_asset_name, to_asset_name, profile_type, milestone_year, profile_value; commission_year=milestone_year, scenario=DEFAULT_SCENARIO)
 
 Attach the profile vector `profile_value` to the flow between `from_asset_name` and `to_asset_name` of
-the type `profile_type` for the milestone `year`.
+the type `profile_type` for the `milestone_year`.
 
-The `commission_year` defaults to `year` (the milestone year). When a different
-`commission_year` is given, the profile data is stored for the milestone `year`
+The `commission_year` defaults to `milestone_year`. When a different
+`commission_year` is given, the profile data is stored for the `milestone_year`
 but the `flows_profiles` table will use the given `commission_year`.
 
 This will also inform the length of the year using the length of the `profile_value`.
@@ -323,23 +328,28 @@ function attach_profile!(
     from_asset_name::KeyType,
     to_asset_name::KeyType,
     profile_type::ProfileType,
-    year::Int,
+    milestone_year::Int,
     profile_value::Vector;
-    commission_year::Int = year,
+    commission_year::Int = milestone_year,
     scenario::Int = DEFAULT_SCENARIO,
 ) where {KeyType}
-    add_or_update_year!(tulipa, year, length = length(profile_value), is_milestone = true)
-    if commission_year != year
+    add_or_update_year!(
+        tulipa,
+        milestone_year,
+        length = length(profile_value),
+        is_milestone = true,
+    )
+    if commission_year != milestone_year
         add_or_update_year!(tulipa, commission_year)
     end
     flow = tulipa.graph[from_asset_name, to_asset_name]
     attach_profile!(
         flow,
         profile_type,
-        year,
+        milestone_year,
         profile_value;
-        commission_year = commission_year,
-        scenario = scenario,
+        commission_year,
+        scenario,
     )
     return tulipa
 end
