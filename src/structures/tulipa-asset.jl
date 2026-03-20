@@ -62,16 +62,17 @@ function attach_commission_data!(
     end
 
     for (k, v) in kwargs
-        # Either the key already exists or it is allowed to s
         if !haskey(asset.commission_year_data[year], k) || on_conflict == :overwrite
+            # If the key doesn't exist or can be overwritten
             asset.commission_year_data[year][k] = v
         elseif on_conflict == :error
+            # The key exists and can't be overwritten
             throw(
                 ExistingKeyError(
                     "Key $k has already been attached for asset=$(asset.name), commission_year=$year",
                 ),
             )
-        end # on_conflict = :skip
+        end # on_conflict = :skip, The key exists so the new value is ignored
     end
     return asset
 end
@@ -102,16 +103,17 @@ function attach_milestone_data!(
     end
 
     for (k, v) in kwargs
-        # Either the key already exists or it is allowed to be overwritten
         if !haskey(asset.milestone_year_data[year], k) || on_conflict == :overwrite
+            # If the key doesn't exist or can be overwritten
             asset.milestone_year_data[year][k] = v
         elseif on_conflict == :error
+            # The key exists and can't be overwritten
             throw(
                 ExistingKeyError(
                     "Key $k has already been attached for asset=$(asset.name), milestone_year=$year",
                 ),
             )
-        end # on_conflict = :skip
+        end # on_conflict = :skip, The key exists so the new value is ignored
     end
     return asset
 end
@@ -138,22 +140,24 @@ function attach_both_years_data!(
     end
     @assert milestone_year ≥ commission_year
     year_key = (commission_year, milestone_year)
+    # If the year has not been set, then it is not possible to have conflicts
     if !haskey(asset.both_years_data, year_key)
         asset.both_years_data[year_key] = Dict{Symbol,Any}(kwargs...)
         return asset
     end
 
     for (k, v) in kwargs
-        # Either the key already exists or it is allowed to be overwritten
         if !haskey(asset.both_years_data[year_key], k) || on_conflict == :overwrite
+            # If the key doesn't exist or can be overwritten
             asset.both_years_data[year_key][k] = v
         elseif on_conflict == :error
+            # The key exists and can't be overwritten
             throw(
                 ExistingKeyError(
                     "Key $k has already been attached for asset=$(asset.name), milestone_year=$milestone_year, commission_year=$commission_year",
                 ),
             )
-        end # on_conflict = :skip
+        end # on_conflict = :skip, The key exists so the new value is ignored
     end
     return asset
 end
