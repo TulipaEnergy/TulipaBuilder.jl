@@ -6,5 +6,13 @@
     "package": "TulipaEnergyModel",
     "user": "TulipaEnergy",
     "version": "latest"
+  },
+  {
+    "extra": {
+      "develop_project": "test"
+    },
+    "package": "TulipaEnergyModel",
+    "user": "TulipaEnergy",
+    "version": "stable"
   }
 ]
