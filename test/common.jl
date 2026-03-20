@@ -48,7 +48,14 @@
                 "SELECT column_name FROM duckdb_columns() WHERE table_name = '$table_name'",
             ) for (key, table_name) in table_names
         )
-        @test Set(column_names["actual"]) == Set(column_names["expected"])
+        actual_cols = Set(column_names["actual"])
+        expected_cols = Set(column_names["expected"])
+        if actual_cols != expected_cols
+            @error "[compare_duckdb_tables] Column mismatch" table = actual_table_name missing_in_actual =
+                sort(collect(setdiff(expected_cols, actual_cols))) extra_in_actual =
+                sort(collect(setdiff(actual_cols, expected_cols)))
+        end
+        @test actual_cols == expected_cols
 
         # Tables have the same amount of rows
         num_rows = Dict(
@@ -57,14 +64,17 @@
                 "SELECT COUNT(*) FROM $table_name",
             )[1] for (key, table_name) in table_names
         )
+        if num_rows["actual"] != num_rows["expected"]
+            @error "[compare_duckdb_tables] Row count mismatch" table = actual_table_name actual =
+                num_rows["actual"] expected = num_rows["expected"]
+        end
         @test num_rows["actual"] == num_rows["expected"]
 
         # Tables have the same content
-        distinct_union_select = "*"
         missing_columns = get(unfixable_missing_columns, actual_table_name, String[])
-        if haskey(unfixable_missing_columns, actual_table_name)
-            distinct_union_select = "* EXCLUDE (" * join(missing_columns, ",") * ")"
-        end
+        distinct_union_select =
+            isempty(missing_columns) ? "*" :
+            "* EXCLUDE (" * join(missing_columns, ", ") * ")"
         distinct_union_df = DataFrame(
             DuckDB.query(
                 connection,
@@ -77,31 +87,35 @@
                 ",
             ),
         )
+        if size(distinct_union_df, 1) != num_rows["actual"]
+            columns_without_default = [
+                key for (key, value) in TEM.schema[actual_table_name] if
+                !haskey(value, "default")
+            ]
+            primary_keys = columns_without_default ∩ POSSIBLE_PRIMARY_KEYS
+            select_cols =
+                join([c for c in sort(column_names["actual"]) if c ∉ missing_columns], ", ")
+            only_in_actual_df = DataFrame(
+                DuckDB.query(
+                    connection,
+                    "SELECT $select_cols FROM $actual_table_name
+                     EXCEPT
+                     SELECT $select_cols FROM $expected_table_name",
+                ),
+            )
+            only_in_expected_df = DataFrame(
+                DuckDB.query(
+                    connection,
+                    "SELECT $select_cols FROM $expected_table_name
+                     EXCEPT
+                     SELECT $select_cols FROM $actual_table_name",
+                ),
+            )
+            @error "[compare_duckdb_tables] Content mismatch" table = actual_table_name primary_keys =
+                primary_keys only_in_actual =
+                sprint(show, only_in_actual_df; context = :displaysize => (1000, 1000)) only_in_expected =
+                sprint(show, only_in_expected_df; context = :displaysize => (1000, 1000))
+        end
         @test size(distinct_union_df, 1) == num_rows["actual"]
-
-        # DEBUGGING (hopefully won't need again)
-        # if size(distinct_union_df, 1) != num_rows["actual"]
-        #     columns_without_default = [
-        #         key for (key, value) in TEM.schema[actual_table_name] if
-        #         !haskey(value, "default")
-        #     ]
-        #     primary_keys = columns_without_default ∩ POSSIBLE_PRIMARY_KEYS
-        #     sort!(distinct_union_df, primary_keys)
-        #     @info "DEBUGGING" distinct_union_df
-        #     @info "DEBUGGING" primary_keys
-        #     primary_values = unique(sort(distinct_union_df[:, primary_keys], primary_keys))
-        #     # if size(primary_values, 1) != num_rows["actual"]
-        #     @info "DEBUGGING" primary_values
-        #     # end
-        #     for column in column_names["actual"]
-        #         if column in primary_keys || column in missing_columns
-        #             continue
-        #         end
-        #         df = unique(sort(distinct_union_df[:, [primary_keys; column]]))
-        #         if size(df, 1) != num_rows["actual"]
-        #             @info "DEBUGGING" df
-        #         end
-        #     end
-        # end
     end
 end
