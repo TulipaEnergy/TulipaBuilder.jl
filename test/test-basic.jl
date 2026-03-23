@@ -47,7 +47,7 @@
     attach_profile!(tulipa, :ccgt, :availability, 2030, rand(0.1:0.1:0.9, 24))
     # no profile for ocgt
 
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
 
     # External
     TC.dummy_cluster!(connection; layout = TC.ProfilesTableLayout(year = :milestone_year))

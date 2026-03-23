@@ -36,7 +36,7 @@ end
     attach_profile!(tulipa, "producer", :availability, 2030, 2 .* ones(24); scenario = 2)
     attach_profile!(tulipa, "producer", :availability, 2030, 3 .* ones(24); scenario = 3)
 
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
 
     # Check that assets_profiles has only one entry (no scenario column)
     assets_profiles_df =
@@ -99,7 +99,7 @@ end
     attach_profile!(tulipa, "consumer", :demand, 2030, ones(24); scenario = 1)
     attach_profile!(tulipa, "consumer", :demand, 2030, 2 .* ones(24); scenario = 2)
 
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
 
     # Check assets_profiles has two entries
     assets_profiles_df =
@@ -233,7 +233,7 @@ end
     # Attach flow profile
     attach_profile!(tulipa, "producer", "consumer", :inflows, 2030, ones(24))
 
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
 
     # Check that flows_profiles table is created with one entry
     flows_profiles_df =
@@ -347,7 +347,7 @@ end
     # Attach flow profile (uses default scenario = 1)
     attach_profile!(tulipa, "producer", "consumer", :inflows, 2030, 3 .* ones(24))
 
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
 
     # Check assets_profiles has one entry
     assets_profiles_df =

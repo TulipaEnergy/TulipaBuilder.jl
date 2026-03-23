@@ -103,7 +103,7 @@ end
     attach_profile!(tulipa, "wind", :availability, 2030, df[!, "availability-wind"])
     # no profile for ocgt
 
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
 
     # External
     period_duration = 24

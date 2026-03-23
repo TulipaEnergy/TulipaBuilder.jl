@@ -4,7 +4,6 @@ using DataFrames: DataFrames, DataFrame
 using DuckDB: DuckDB, DBInterface
 using Graphs: Graphs
 using MetaGraphsNext: MetaGraphsNext
-using TulipaEnergyModel: TulipaEnergyModel as TEM
 using TulipaIO: TulipaIO as TIO
 
 const AssetType = Symbol

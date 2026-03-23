@@ -228,7 +228,7 @@ end
 
     # Demonstrate the constraint: create_connection fails on years without length
     @test_throws r"Not possible to determine length of year \d+\. Try attaching a profile" begin
-        create_connection(tulipa)
+        create_connection(tulipa, TEM.schema)
     end
 
     # To make years functional, must add profiles (which makes them milestone)
@@ -242,7 +242,7 @@ end
     @test tulipa.years[2030][:length] == 100         # Profile provided length
 
     # Now create_connection works
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
 
     # Verify year_data table reflects the constraint
     year_data_df =

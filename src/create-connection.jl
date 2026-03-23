@@ -33,26 +33,26 @@ function create_empty_table_from_schema!(connection, table_name, schema, columns
 end
 
 """
-    _get_select_query_row(key, value, table_name)
+    _get_select_query_row(schema, key, value, table_name)
 
-Using the TulipaEnergyModel.schema for `table_name`,
+Using the `schema` for `table_name`,
 """
-function _get_select_query_row(key, value, table_name)
+function _get_select_query_row(schema, key, value, table_name)
     key = String(key)
-    if !haskey(TEM.schema[table_name], key)
+    if !haskey(schema[table_name], key)
         return ""
     end
-    col_type = TEM.schema[table_name][key]["type"]
+    col_type = schema[table_name][key]["type"]
     col_value = TIO.FmtSQL.fmt_quote(value)
     return "$col_value::$col_type AS \"$key\", "
 end
 
 """
-    propagate_year_data!(tulipa_data)
+    propagate_year_data!(tulipa_data, schema)
 
 Propagates keys from `asset` to `asset_milestone`, `asset_commission` and `asset_both`, to avoid explicitly attaching a global value.
 """
-function propagate_year_data!(tulipa)
+function propagate_year_data!(tulipa, schema)
     # Milestone years: years marked as is_milestone
     milestone_years =
         [year for (year, props) in tulipa.years if get(props, :is_milestone, false)]
@@ -69,7 +69,7 @@ function propagate_year_data!(tulipa)
         )
             relevant_keys = Dict(
                 key => value for (key, value) in asset.basic_data if
-                haskey(TEM.schema[table_name], string(key))
+                haskey(schema[table_name], string(key))
             )
             for year in propagation_years
                 attach!(asset, year; on_conflict = :skip, relevant_keys...)
@@ -89,7 +89,7 @@ function propagate_year_data!(tulipa)
 
         relevant_keys = Dict(
             key => value for (key, value) in asset.basic_data if
-            haskey(TEM.schema["asset_both"], string(key))
+            haskey(schema["asset_both"], string(key))
         )
         for year in milestone_years
             attach_both_years_data!(
@@ -114,7 +114,7 @@ function propagate_year_data!(tulipa)
         )
             relevant_keys = Dict(
                 key => value for (key, value) in flow.basic_data if
-                haskey(TEM.schema[table_name], string(key))
+                haskey(schema[table_name], string(key))
             )
             for year in propagation_years
                 attach!(flow, year; on_conflict = :skip, relevant_keys...)
@@ -131,8 +131,8 @@ function propagate_year_data!(tulipa)
         end
 
         relevant_keys = Dict(
-            key => value for (key, value) in flow.basic_data if
-            haskey(TEM.schema["flow_both"], string(key))
+            key => value for
+            (key, value) in flow.basic_data if haskey(schema["flow_both"], string(key))
         )
         for year in milestone_years
             attach_both_years_data!(flow, year, year; on_conflict = :skip, relevant_keys...)
@@ -143,13 +143,14 @@ end
 # IDEA: function for_each_asset(f, tulipa)
 
 """
-    create_connection(tulipa_data)
-    create_connection(tulipa_data, db)
+    create_connection(tulipa_data, schema)
+    create_connection(tulipa_data, schema, db)
 
 Creates a DuckDB connection and populates it with the data from `tulipa_data`.
+The `schema` should be a dict in the same format as `TulipaEnergyModel.schema`.
 If `db` is not given, a memory connection is created.
 """
-function create_connection(tulipa::TulipaData, db = ":memory:")
+function create_connection(tulipa::TulipaData, schema; db = ":memory:")
     connection = DBInterface.connect(DuckDB.DB, db)
     run_query(s) = DuckDB.query(connection, s)
 
@@ -162,7 +163,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
     end
 
     # Propagate yearly information before continuing
-    propagate_year_data!(tulipa)
+    propagate_year_data!(tulipa, schema)
 
     # Table asset
     # TODO: This is a terrible way of doing this
@@ -174,13 +175,13 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             (key, value) in tulipa.graph[asset_name].basic_data
         ])
     ]
-    create_empty_table_from_schema!(connection, "asset", TEM.schema["asset"], columns)
+    create_empty_table_from_schema!(connection, "asset", schema["asset"], columns)
     for asset_name in MetaGraphsNext.labels(tulipa.graph)
         asset_type = tulipa.graph[asset_name].type
         query = "INSERT INTO asset BY NAME (SELECT '$asset_name' AS asset, '$asset_type' AS type, "
         asset = tulipa.graph[asset_name]
         for (key, value) in asset.basic_data
-            query_row = _get_select_query_row(key, value, "asset")
+            query_row = _get_select_query_row(schema, key, value, "asset")
             if query_row == ""
                 @debug "Ignoring column $key from asset '$asset_name'"
                 continue
@@ -201,12 +202,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             key in collect_sub_keys(tulipa.graph[asset_name].both_years_data)
         ])
     ]
-    create_empty_table_from_schema!(
-        connection,
-        "asset_both",
-        TEM.schema["asset_both"],
-        columns,
-    )
+    create_empty_table_from_schema!(connection, "asset_both", schema["asset_both"], columns)
     for asset_name in MetaGraphsNext.labels(tulipa.graph)
         asset = tulipa.graph[asset_name]
         for ((commission_year, milestone_year), values) in asset.both_years_data
@@ -216,7 +212,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
                     $commission_year AS commission_year,
             """
             for (key, value) in values
-                query_row = _get_select_query_row(key, value, "asset_both")
+                query_row = _get_select_query_row(schema, key, value, "asset_both")
                 if query_row == ""
                     @debug "Ignoring column $key from asset '$asset_name' (both years)"
                     continue
@@ -240,7 +236,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
     create_empty_table_from_schema!(
         connection,
         "asset_commission",
-        TEM.schema["asset_commission"],
+        schema["asset_commission"],
         columns,
     )
     for asset_name in MetaGraphsNext.labels(tulipa.graph)
@@ -251,7 +247,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
                 $commission_year AS commission_year,
             """
             for (key, value) in values
-                query_row = _get_select_query_row(key, value, "asset_commission")
+                query_row = _get_select_query_row(schema, key, value, "asset_commission")
                 if query_row == ""
                     @debug "Ignoring column $key from asset '$asset_name' (commission year)"
                     continue
@@ -276,7 +272,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
     create_empty_table_from_schema!(
         connection,
         "asset_milestone",
-        TEM.schema["asset_milestone"],
+        schema["asset_milestone"],
         columns,
     )
     for asset_name in MetaGraphsNext.labels(tulipa.graph)
@@ -287,7 +283,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
                 $milestone_year AS milestone_year,
             """
             for (key, value) in values
-                query_row = _get_select_query_row(key, value, "asset_milestone")
+                query_row = _get_select_query_row(schema, key, value, "asset_milestone")
                 if query_row == ""
                     @debug "Ignoring column $key from asset '$asset_name' (milestone year)"
                     continue
@@ -308,7 +304,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             (key, value) in tulipa.graph[flow_tuple...].basic_data
         ])
     ]
-    create_empty_table_from_schema!(connection, "flow", TEM.schema["flow"], columns)
+    create_empty_table_from_schema!(connection, "flow", schema["flow"], columns)
     for flow_tuple in MetaGraphsNext.edge_labels(tulipa.graph)
         flow = tulipa.graph[flow_tuple...]
         from_asset = flow_tuple[1]
@@ -318,7 +314,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             '$to_asset' AS to_asset,
         """
         for (key, value) in flow.basic_data
-            query_row = _get_select_query_row(key, value, "flow")
+            query_row = _get_select_query_row(schema, key, value, "flow")
             if query_row == ""
                 @debug "Ignoring column $key from flow ('$from_asset','$to_asset')"
                 continue
@@ -340,12 +336,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             key in collect_sub_keys(tulipa.graph[flow_tuple...].both_years_data)
         ])
     ]
-    create_empty_table_from_schema!(
-        connection,
-        "flow_both",
-        TEM.schema["flow_both"],
-        columns,
-    )
+    create_empty_table_from_schema!(connection, "flow_both", schema["flow_both"], columns)
     for flow_tuple in MetaGraphsNext.edge_labels(tulipa.graph)
         from_asset = flow_tuple[1]
         to_asset = flow_tuple[2]
@@ -358,7 +349,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
                     $commission_year AS commission_year,
             """
             for (key, value) in values
-                query_row = _get_select_query_row(key, value, "flow_both")
+                query_row = _get_select_query_row(schema, key, value, "flow_both")
                 if query_row == ""
                     @debug "Ignoring column $key from flow ('$from_asset','$to_asset') (both years)"
                     continue
@@ -383,7 +374,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
     create_empty_table_from_schema!(
         connection,
         "flow_commission",
-        TEM.schema["flow_commission"],
+        schema["flow_commission"],
         columns,
     )
     for flow_tuple in MetaGraphsNext.edge_labels(tulipa.graph)
@@ -397,7 +388,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
                     $commission_year AS commission_year,
             """
             for (key, value) in values
-                query_row = _get_select_query_row(key, value, "flow_commission")
+                query_row = _get_select_query_row(schema, key, value, "flow_commission")
                 if query_row == ""
                     @debug "Ignoring column $key from flow ('$from_asset','$to_asset') (commission years)"
                     continue
@@ -422,7 +413,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
     create_empty_table_from_schema!(
         connection,
         "flow_milestone",
-        TEM.schema["flow_milestone"],
+        schema["flow_milestone"],
         columns,
     )
     for flow_tuple in MetaGraphsNext.edge_labels(tulipa.graph)
@@ -436,7 +427,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
                     $milestone_year AS milestone_year,
             """
             for (key, value) in values
-                query_row = _get_select_query_row(key, value, "flow_milestone")
+                query_row = _get_select_query_row(schema, key, value, "flow_milestone")
                 if query_row == ""
                     @debug "Ignoring column $key from flow ('$from_asset','$to_asset') (milestone years)"
                     continue
@@ -656,7 +647,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         create_empty_table_from_schema!(
             connection,
             "group_asset",
-            TEM.schema["group_asset"],
+            schema["group_asset"],
             [
                 "name",
                 "milestone_year",
@@ -669,7 +660,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
             query = """INSERT INTO group_asset BY NAME (
                 SELECT '$group_name' AS name, $year AS milestone_year,"""
             for (key, value) in group_data
-                query *= _get_select_query_row(key, value, "group_asset")
+                query *= _get_select_query_row(schema, key, value, "group_asset")
             end
             query *= ")"
             run_query(query)
@@ -685,7 +676,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         create_empty_table_from_schema!(
             connection,
             "assets_rep_periods_partitions",
-            TEM.schema["assets_rep_periods_partitions"],
+            schema["assets_rep_periods_partitions"],
             columns,
         )
         for asset_name in MetaGraphsNext.labels(tulipa.graph)
@@ -700,11 +691,13 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
                 specification = get(value, :specification, "uniform")
                 partition = value[:partition] # no default for partition
                 query *= _get_select_query_row(
+                    schema,
                     :specification,
                     specification,
                     "assets_rep_periods_partitions",
                 )
                 query *= _get_select_query_row(
+                    schema,
                     :partition,
                     partition,
                     "assets_rep_periods_partitions",
@@ -731,7 +724,7 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
         create_empty_table_from_schema!(
             connection,
             "flows_rep_periods_partitions",
-            TEM.schema["flows_rep_periods_partitions"],
+            schema["flows_rep_periods_partitions"],
             columns,
         )
         for (from_asset_name, to_asset_name) in MetaGraphsNext.edge_labels(tulipa.graph)
@@ -746,11 +739,13 @@ function create_connection(tulipa::TulipaData, db = ":memory:")
                 specification = get(value, :specification, "uniform")
                 partition = value[:partition] # no default for partition
                 query *= _get_select_query_row(
+                    schema,
                     :specification,
                     specification,
                     "flows_rep_periods_partitions",
                 )
                 query *= _get_select_query_row(
+                    schema,
                     :partition,
                     partition,
                     "flows_rep_periods_partitions",

@@ -57,16 +57,28 @@ for (asset_name, config) in config_dicts
     attach_profile!(tulipa, asset_name, :availability, 2030, profile)
 end
 
-connection = create_connection(tulipa)
+connection = create_connection(tulipa, TulipaEnergyModel.schema)
 
-TulipaBuilder.create_case_study_csv_folder(connection, "demolipa/pre-cluster")
+TulipaBuilder.create_case_study_csv_folder(
+    connection,
+    TulipaEnergyModel.schema,
+    "demolipa/pre-cluster",
+)
 
 ### clustering
 dummy_cluster!(connection)
 
-TulipaBuilder.create_case_study_csv_folder(connection, "demolipa/pre-populate")
+TulipaBuilder.create_case_study_csv_folder(
+    connection,
+    TulipaEnergyModel.schema,
+    "demolipa/pre-populate",
+)
 
 ### populate_with_defaults
 populate_with_defaults!(connection)
 
-TulipaBuilder.create_case_study_csv_folder(connection, "demolipa/full")
+TulipaBuilder.create_case_study_csv_folder(
+    connection,
+    TulipaEnergyModel.schema,
+    "demolipa/full",
+)

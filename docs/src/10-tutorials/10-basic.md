@@ -41,7 +41,8 @@ attach_profile!(tulipa, "consumer", :demand, 2030, demand_profile)
 Now we can create the connection with the data of the Tulipa problem using the `create_connection` function.
 
 ```@example basic
-connection = create_connection(tulipa)
+using TulipaEnergyModel: TulipaEnergyModel as TEM
+connection = create_connection(tulipa, TEM.schema)
 
 # Inspect all tables in DuckDB
 using DuckDB, DataFrames
@@ -52,7 +53,7 @@ Optionally, you might also want to create a folder with the data in CSV format:
 
 ```@example basic
 output_folder = mktempdir() # Define the output folder
-create_case_study_csv_folder(connection, output_folder)
+create_case_study_csv_folder(connection, TEM.schema, output_folder)
 
 readdir(output_folder)
 ```
@@ -61,9 +62,9 @@ For completeness, here is rest of the pipeline for clustering, populating with d
 
 ```@example basic
 # Don't forget to cluster and populate with defaults before solving the problem
-using TulipaEnergyModel, TulipaClustering
+using TulipaClustering: TulipaClustering as TC
 
-dummy_cluster!(connection; layout = TulipaClustering.ProfilesTableLayout(year = :milestone_year))
-populate_with_defaults!(connection)
-ep = run_scenario(connection)
+TC.dummy_cluster!(connection; layout = TC.ProfilesTableLayout(year = :milestone_year))
+TEM.populate_with_defaults!(connection)
+ep = TEM.run_scenario(connection)
 ```

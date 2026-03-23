@@ -5,7 +5,7 @@
     add_asset!(tulipa, :asset2, :producer)
     tulipa.years[2025] = Dict(:length => 1, :is_milestone => true)
 
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
     initial_units = Dict("asset1" => 100.0, "asset2" => 0.0) # 0.0 is the default
     for row in DuckDB.query(connection, "FROM asset_both")
         @test row.initial_units == initial_units[row.asset]
@@ -22,7 +22,7 @@ end
     add_asset!(tulipa, :none_asset, :producer, investment_method = "none")
     tulipa.years[2025] = Dict(:length => 1, :is_milestone => true)
 
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
     asset_both_assets =
         Set(row.asset for row in DuckDB.query(connection, "FROM asset_both"))
     @test "simple" in asset_both_assets
@@ -39,7 +39,7 @@ end
     tulipa.years[2025] = Dict(:length => 1, :is_milestone => true)
     tulipa.years[2020] = Dict(:length => 1, :is_milestone => false)  # commission year, no data
 
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
 
     milestone_rows = collect(DuckDB.query(connection, "FROM asset_milestone"))
     commission_rows = collect(DuckDB.query(connection, "FROM asset_commission"))
@@ -67,7 +67,7 @@ end
     # Register year 2020 as a commission year — no need to duplicate investment_cost
     attach_commission_data!(tulipa, :producer, :consumer, 2020)
 
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
 
     commission_rows = Dict(
         row.commission_year => row for
@@ -90,7 +90,7 @@ end
     add_asset!(tulipa, :asset2, :producer)
     tulipa.years[2025] = Dict(:length => 1, :is_milestone => true)
 
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
 
     commission_rows =
         Dict(row.asset => row for row in DuckDB.query(connection, "FROM asset_commission"))
@@ -110,7 +110,7 @@ end
     # Register year 2020 as a commission year — no need to duplicate investment_cost
     attach_commission_data!(tulipa, :asset1, 2020)
 
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
 
     commission_rows = Dict(
         row.commission_year => row for
@@ -144,7 +144,7 @@ end
     add_flow!(tulipa, :prod3, :dem, decommissionable = false, is_transport = true)
     tulipa.years[2025] = Dict(:length => 1, :is_milestone => true)
 
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
     decommissionable = Dict(("prod2", "dem") => true, ("prod3", "dem") => false)
     fixed_cost =
         Dict(("prod1", "dem") => 0.0, ("prod2", "dem") => 5.0, ("prod3", "dem") => 0.0)

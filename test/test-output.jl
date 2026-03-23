@@ -9,8 +9,13 @@
         return data
     end
 
-    function create_and_get_data(tulipa; cluster = false, populate_with_defaults = false)
-        connection = create_connection(tulipa)
+    function create_and_get_data(
+        tulipa,
+        schema;
+        cluster = false,
+        populate_with_defaults = false,
+    )
+        connection = create_connection(tulipa, schema)
         if cluster
             TC.dummy_cluster!(
                 connection;
@@ -22,7 +27,7 @@
         end
 
         tmpdir = mktempdir()
-        create_case_study_csv_folder(connection, tmpdir)
+        create_case_study_csv_folder(connection, schema, tmpdir)
         folder_data = read_csv_folder_into_df(tmpdir)
 
         return folder_data
@@ -107,7 +112,7 @@ end
     tulipa = TulipaData{String}()
 
     manual_data = manual_empty_data()
-    data = create_and_get_data(tulipa)
+    data = create_and_get_data(tulipa, TEM.schema)
     test_that_tables_are_equivalent(data, manual_data)
 end
 
@@ -134,7 +139,7 @@ end
     # notice that it is all string because of the conversion to CSV and back
     push!(manual_data[:asset], ("ccgt", "producer", 2.0, "simple"))
 
-    data = create_and_get_data(tulipa)
+    data = create_and_get_data(tulipa, TEM.schema)
     test_that_tables_are_equivalent(data, manual_data)
 
     ## Stage 2 - attach profile columns are picked up)
@@ -157,7 +162,7 @@ end
 
     push!(manual_data[:year_data], (2030, 24, 1.0))
 
-    data = create_and_get_data(tulipa)
+    data = create_and_get_data(tulipa, TEM.schema)
     test_that_tables_are_equivalent(data, manual_data)
 
     ## Stage 3 - another asset and a flow
@@ -175,6 +180,6 @@ end
     push!(manual_data[:flow_milestone], ("ccgt", "Hub", 2030, 4.0))
     # push!(manual_data[:flow_both], ("ccgt", "Hub", 2030, 2030)) # ERROR: Should this be here?
 
-    data = create_and_get_data(tulipa)
+    data = create_and_get_data(tulipa, TEM.schema)
     test_that_tables_are_equivalent(data, manual_data)
 end
