@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 TulipaBuilder.jl is a Julia package that provides a **graph-based constructive user interface for TulipaEnergyModel.jl**. The primary goal is to create the simplest possible way for users to build energy system models that are compatible with TulipaEnergyModel.jl.
 
-The package uses a graph-based approach where assets (producers, consumers) are vertices and flows are edges, with MetaGraphsNext.jl as the underlying data structure. The entire system is **schema-driven** - it dynamically uses `TulipaEnergyModel.schema` (which corresponds to the input-schemas.json file in TulipaEnergyModel.jl) to ensure compatibility across different versions.
+The package uses a graph-based approach where assets (producers, consumers) are vertices and flows are edges, with MetaGraphsNext.jl as the underlying data structure. The entire system is **schema-driven** - it accepts a `schema` dict (matching the structure of `TulipaEnergyModel.schema`, which corresponds to the input-schemas.json file in TulipaEnergyModel.jl) to dynamically determine column types and defaults, ensuring compatibility across different versions.
 
 ## Target Users
 
@@ -27,10 +27,11 @@ The package uses a graph-based approach where assets (producers, consumers) are 
 
 **CRITICAL**: The package avoids hardcoding column names from TulipaEnergyModel schemas to maintain compatibility across versions. Only required columns (like "asset", "type", "from_asset", "to_asset") are hardcoded.
 
-- All table creation uses `TulipaEnergyModel.schema` to dynamically determine column types and defaults
-- Functions check `haskey(TulipaEnergyModel.schema[table_name], key)` before using columns
+- All table creation uses the `schema` argument passed to `create_connection` and `create_case_study_csv_folder` to dynamically determine column types and defaults
+- Functions check `haskey(schema[table_name], key)` before using columns
 - Unknown columns are ignored with warnings rather than causing errors
-- This allows the same TulipaBuilder code to work with different TulipaEnergyModel versions
+- This allows the same TulipaBuilder code to work with any compatible schema dict, including different TulipaEnergyModel versions
+- TulipaEnergyModel is **not** a direct dependency of TulipaBuilder; callers pass `TEM.schema` explicitly
 
 ## Essential Commands
 
@@ -87,10 +88,11 @@ The main workflow creates a graph-based model and converts it to TulipaEnergyMod
 3. **Add Profiles**: Use `attach_profile!(tulipa, asset, profile_type, year, data)` for time-series data
    - **REQUIRED**: At least one profile per year for optimization to work
    - Profiles automatically mark years as milestone years and set year length
-4. **Convert to Database**: `create_connection(tulipa)` converts the graph to DuckDB format
+4. **Convert to Database**: `create_connection(tulipa, schema)` converts the graph to DuckDB format
+   - `schema` is typically `TulipaEnergyModel.schema` from TEM
    - Automatically propagates asset/flow properties to all year-specific tables
    - Automatically fills missing (asset, year) and (flow, year) combinations
-5. **Export (Optional)**: `create_case_study_csv_folder(connection, folder_path)` exports to CSV files
+5. **Export (Optional)**: `create_case_study_csv_folder(connection, schema, folder_path)` exports to CSV files
 6. **Solve**: Run `TulipaEnergyModel.run_scenario(connection)` on the resulting connection
 
 ### Advanced Workflow (Year-Specific Overrides)
@@ -125,22 +127,22 @@ TulipaBuilder performs several automatic transformations to simplify the user ex
    - Sets commission_year = milestone_year (same year)
    - Ensures data structure consistency
 
-5. **Schema-Driven Tables**: All tables created dynamically from TulipaEnergyModel.schema
-   - Only includes columns that exist in the current TEM version
+5. **Schema-Driven Tables**: All tables created dynamically from the `schema` argument
+   - Only includes columns that exist in the provided schema
    - Applies schema defaults automatically
 
 ### Key Conversion Process (create_connection)
 
-The `create_connection()` function is the bridge between TulipaBuilder's graph representation and TulipaEnergyModel's database format. It:
+The `create_connection(tulipa, schema)` function is the bridge between TulipaBuilder's graph representation and TulipaEnergyModel's database format. It:
 
-- Dynamically creates tables (asset, asset_both, asset_commission, asset_milestone, flow, flow_both, flow_commission, flow_milestone, profiles, assets_profiles, year_data) based on `TulipaEnergyModel.schema`
-- Only includes columns that exist in the current schema version
+- Dynamically creates tables (asset, asset_both, asset_commission, asset_milestone, flow, flow_both, flow_commission, flow_milestone, profiles, assets_profiles, year_data) based on the provided `schema` dict
+- Only includes columns that exist in the provided schema
 - Converts graph data to SQL insertions with proper type casting
 - Handles profiles as separate tables with timestep-based indexing
 
 ## Important Dependencies
 
-- **TulipaEnergyModel**: The solver backend - provides the schema and solves the optimization model
+- **TulipaEnergyModel**: The solver backend — solves the optimization model and provides the schema dict (`TEM.schema`) that callers pass to `create_connection` and `create_case_study_csv_folder`. TulipaEnergyModel is **not** a direct dependency of TulipaBuilder itself.
 - **MetaGraphsNext**: Graph data structure for representing the energy system as assets (vertices) and flows (edges)
 - **DataFrames**: Data manipulation for profiles and results
 - **DuckDB**: In-memory database for the final data format expected by TulipaEnergyModel
@@ -173,8 +175,8 @@ The `create_connection()` function is the bridge between TulipaBuilder's graph r
 ### Schema Compatibility Rules
 
 1. **Never hardcode column names** except for the core required ones (asset, type, from_asset, to_asset, commission_year, milestone_year)
-2. **Always check schema existence** with `haskey(TulipaEnergyModel.schema[table_name], key)` before using columns
-3. **Let TulipaEnergyModel.schema define** column types and defaults dynamically
+2. **Always check schema existence** with `haskey(schema[table_name], key)` before using columns
+3. **Let the `schema` argument define** column types and defaults dynamically — callers typically pass `TulipaEnergyModel.schema`
 4. **Propagation is automatic**: Properties in `add_asset!()` and `add_flow!()` automatically propagate to year-specific tables via `propagate_year_data!()`
 5. **Year-specific overrides**: Use `attach_*_data!()` functions only when you need different values for specific years
 
@@ -276,7 +278,7 @@ end
 ```julia
 @testmodule SharedAssets begin
   const COMPLEX_TULIPA = create_complex_test_model()  # Create once
-  const REFERENCE_CONNECTION = create_connection(COMPLEX_TULIPA)  # Compute once
+  const REFERENCE_CONNECTION = create_connection(COMPLEX_TULIPA, MY_SCHEMA)  # Compute once
 end
 
 @testitem "Validation works" setup=[CommonSetup, SharedAssets] begin
