@@ -24,8 +24,8 @@
     )
 end
 
-@testitem "Comparison of Tiny generated via TulipaBuilder" tags = [:integration] setup =
-    [CommonSetup, TinyFixes] begin
+@testitem "Comparison of Tiny generated via TulipaBuilder" tags =
+    [:integration, :tem_schema] setup = [CommonSetup, TinyFixes] begin
 
     tulipa = TulipaData{String}()
 

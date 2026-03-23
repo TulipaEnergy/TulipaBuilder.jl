@@ -53,6 +53,8 @@ const TAGS_DATA = Dict( # The tags below are a suggestion
 
     # Features (What features are being tested?)
     :api => "API consistency and convention tests",
+    :tem_schema => "Tests that require TEM.schema to be passed to create_connection or create_case_study_csv_folder",
+    :schema => "Tests that use a minimal test schema instead of TEM.schema",
 )
 
 function main()

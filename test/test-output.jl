@@ -107,7 +107,7 @@
     end
 end
 
-@testitem "Test exporting empty problem to case study" tags = [:export] setup =
+@testitem "Test exporting empty problem to case study" tags = [:export, :tem_schema] setup =
     [CommonSetup, ExportSetup] begin
     tulipa = TulipaData{String}()
 
@@ -116,8 +116,8 @@ end
     test_that_tables_are_equivalent(data, manual_data)
 end
 
-@testitem "Test exporting basic problem to case study - multiple stages" tags = [:export] setup =
-    [CommonSetup, ExportSetup] begin
+@testitem "Test exporting basic problem to case study - multiple stages" tags =
+    [:export, :tem_schema] setup = [CommonSetup, ExportSetup] begin
     tulipa = TulipaData{String}()
 
     ## Stage 1 - 1 asset (some columns are ignored)

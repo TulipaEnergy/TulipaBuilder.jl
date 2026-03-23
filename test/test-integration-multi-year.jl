@@ -24,7 +24,7 @@
 end
 
 @testitem "Comparison of Multi-year Investments generated via TulipaBuilder" tags =
-    [:integration] setup = [CommonSetup, MultiYearFixes] begin
+    [:integration, :tem_schema] setup = [CommonSetup, MultiYearFixes] begin
 
     tulipa = TulipaData{String}()
 

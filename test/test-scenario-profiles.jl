@@ -24,7 +24,8 @@
 end
 
 @testitem "Create connection with scenario profiles for assets" tags =
-    [:unit, :fast, :scenario] setup = [CommonSetup, CreateConnectionSetup] begin
+    [:unit, :fast, :scenario, :schema] setup =
+    [CommonSetup, CreateConnectionSetup, TestSchema] begin
     using DuckDB: DuckDB
     using DataFrames: DataFrames, DataFrame
 
@@ -36,7 +37,7 @@ end
     attach_profile!(tulipa, "producer", :availability, 2030, 2 .* ones(24); scenario = 2)
     attach_profile!(tulipa, "producer", :availability, 2030, 3 .* ones(24); scenario = 3)
 
-    connection = create_connection(tulipa, TEM.schema)
+    connection = create_connection(tulipa, TestSchema.schema)
 
     # Check that assets_profiles has only one entry (no scenario column)
     assets_profiles_df =
@@ -84,7 +85,8 @@ end
 end
 
 @testitem "Create connection with mixed profiles (scenario and non-scenario)" tags =
-    [:unit, :fast, :scenario] setup = [CommonSetup, CreateConnectionSetup] begin
+    [:unit, :fast, :scenario, :schema] setup =
+    [CommonSetup, CreateConnectionSetup, TestSchema] begin
     using DuckDB: DuckDB
     using DataFrames: DataFrames, DataFrame
 
@@ -99,7 +101,7 @@ end
     attach_profile!(tulipa, "consumer", :demand, 2030, ones(24); scenario = 1)
     attach_profile!(tulipa, "consumer", :demand, 2030, 2 .* ones(24); scenario = 2)
 
-    connection = create_connection(tulipa, TEM.schema)
+    connection = create_connection(tulipa, TestSchema.schema)
 
     # Check assets_profiles has two entries
     assets_profiles_df =
@@ -220,8 +222,8 @@ end
     )
 end
 
-@testitem "Create connection with flow profiles" tags = [:unit, :fast, :scenario] setup =
-    [CommonSetup, CreateConnectionSetup] begin
+@testitem "Create connection with flow profiles" tags = [:unit, :fast, :scenario, :schema] setup =
+    [CommonSetup, CreateConnectionSetup, TestSchema] begin
     using DuckDB: DuckDB
     using DataFrames: DataFrames, DataFrame
 
@@ -233,7 +235,7 @@ end
     # Attach flow profile
     attach_profile!(tulipa, "producer", "consumer", :inflows, 2030, ones(24))
 
-    connection = create_connection(tulipa, TEM.schema)
+    connection = create_connection(tulipa, TestSchema.schema)
 
     # Check that flows_profiles table is created with one entry
     flows_profiles_df =
@@ -331,7 +333,8 @@ end
 end
 
 @testitem "Create connection with mixed asset scenario profiles and flow profiles" tags =
-    [:unit, :fast, :scenario] setup = [CommonSetup, CreateConnectionSetup] begin
+    [:unit, :fast, :scenario, :schema] setup =
+    [CommonSetup, CreateConnectionSetup, TestSchema] begin
     using DuckDB: DuckDB
     using DataFrames: DataFrames, DataFrame
 
@@ -347,7 +350,7 @@ end
     # Attach flow profile (uses default scenario = 1)
     attach_profile!(tulipa, "producer", "consumer", :inflows, 2030, 3 .* ones(24))
 
-    connection = create_connection(tulipa, TEM.schema)
+    connection = create_connection(tulipa, TestSchema.schema)
 
     # Check assets_profiles has one entry
     assets_profiles_df =

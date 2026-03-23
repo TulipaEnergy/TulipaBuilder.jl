@@ -1,3 +1,76 @@
+@testmodule TestSchema begin
+    const schema = Dict{String,Dict{String,Dict{String,Any}}}(
+        "asset" => Dict(
+            "asset" => Dict("type" => "VARCHAR"),
+            "type" => Dict("type" => "VARCHAR"),
+            "capacity" => Dict("type" => "DOUBLE", "default" => 0.0),
+            "investment_method" => Dict("type" => "VARCHAR", "default" => "none"),
+        ),
+        "asset_both" => Dict(
+            "asset" => Dict("type" => "VARCHAR"),
+            "commission_year" => Dict("type" => "INT64"),
+            "milestone_year" => Dict("type" => "INT64"),
+            "initial_units" => Dict("type" => "DOUBLE", "default" => 0.0),
+        ),
+        "asset_commission" => Dict(
+            "asset" => Dict("type" => "VARCHAR"),
+            "commission_year" => Dict("type" => "INT64"),
+            "investment_cost" => Dict("type" => "DOUBLE", "default" => 0.0),
+        ),
+        "asset_milestone" => Dict(
+            "asset" => Dict("type" => "VARCHAR"),
+            "milestone_year" => Dict("type" => "INT64"),
+            "investable" => Dict("type" => "BOOLEAN", "default" => false),
+        ),
+        "flow" => Dict(
+            "from_asset" => Dict("type" => "VARCHAR"),
+            "to_asset" => Dict("type" => "VARCHAR"),
+        ),
+        "flow_both" => Dict(
+            "from_asset" => Dict("type" => "VARCHAR"),
+            "to_asset" => Dict("type" => "VARCHAR"),
+            "commission_year" => Dict("type" => "INT64"),
+            "milestone_year" => Dict("type" => "INT64"),
+            "decommissionable" => Dict("type" => "BOOLEAN", "default" => false),
+        ),
+        "flow_commission" => Dict(
+            "from_asset" => Dict("type" => "VARCHAR"),
+            "to_asset" => Dict("type" => "VARCHAR"),
+            "commission_year" => Dict("type" => "INT64"),
+            "investment_cost" => Dict("type" => "DOUBLE", "default" => 0.0),
+            "fixed_cost" => Dict("type" => "DOUBLE", "default" => 0.0),
+        ),
+        "flow_milestone" => Dict(
+            "from_asset" => Dict("type" => "VARCHAR"),
+            "to_asset" => Dict("type" => "VARCHAR"),
+            "milestone_year" => Dict("type" => "INT64"),
+            "operational_cost" => Dict("type" => "DOUBLE", "default" => 0.0),
+        ),
+        "group_asset" => Dict(
+            "name" => Dict("type" => "VARCHAR"),
+            "milestone_year" => Dict("type" => "INT64"),
+            "invest_method" => Dict("type" => "BOOLEAN"),
+            "min_investment_limit" => Dict("type" => "DOUBLE"),
+            "max_investment_limit" => Dict("type" => "DOUBLE"),
+        ),
+        "assets_rep_periods_partitions" => Dict(
+            "asset" => Dict("type" => "VARCHAR"),
+            "milestone_year" => Dict("type" => "INT64"),
+            "rep_period" => Dict("type" => "INT64"),
+            "specification" => Dict("type" => "VARCHAR", "default" => "uniform"),
+            "partition" => Dict("type" => "VARCHAR"),
+        ),
+        "flows_rep_periods_partitions" => Dict(
+            "from_asset" => Dict("type" => "VARCHAR"),
+            "to_asset" => Dict("type" => "VARCHAR"),
+            "milestone_year" => Dict("type" => "INT64"),
+            "rep_period" => Dict("type" => "INT64"),
+            "specification" => Dict("type" => "VARCHAR", "default" => "uniform"),
+            "partition" => Dict("type" => "VARCHAR"),
+        ),
+    )
+end
+
 @testsnippet CommonSetup begin
     using CSV: CSV
     using DataFrames: DataFrame

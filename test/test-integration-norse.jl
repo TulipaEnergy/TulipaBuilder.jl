@@ -25,8 +25,8 @@
     )
 end
 
-@testitem "Comparison of Norse generated via TulipaBuilder" tags = [:integration] setup =
-    [CommonSetup, NorseFixes] begin
+@testitem "Comparison of Norse generated via TulipaBuilder" tags =
+    [:integration, :tem_schema] setup = [CommonSetup, NorseFixes] begin
 
     tulipa = TulipaData{String}()
 

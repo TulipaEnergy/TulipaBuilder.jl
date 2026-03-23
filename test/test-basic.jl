@@ -1,4 +1,4 @@
-@testitem "TulipaBuilder.jl" tags = [:basic] setup = [CommonSetup] begin
+@testitem "TulipaBuilder.jl" tags = [:basic, :tem_schema] setup = [CommonSetup] begin
     tulipa = TulipaData{Symbol}()
 
     ### assets
