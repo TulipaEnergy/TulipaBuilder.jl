@@ -1,5 +1,39 @@
 export create_connection
 
+const _REQUIRED_SCHEMA_TABLES = [
+    "asset",
+    "asset_both",
+    "asset_commission",
+    "asset_milestone",
+    "flow",
+    "flow_both",
+    "flow_commission",
+    "flow_milestone",
+]
+
+"""
+    _validate_schema(schema)
+
+Checks that `schema` contains the table names required by [`create_connection`](@ref).
+Throws an `ArgumentError` listing any missing tables if they are absent.
+This function is for internal use only.
+"""
+function _validate_schema(schema)
+    missing_tables = filter(t -> !haskey(schema, t), _REQUIRED_SCHEMA_TABLES)
+    if !isempty(missing_tables)
+        throw(
+            ArgumentError(
+                "The provided schema is missing required table(s): " *
+                join(sort(missing_tables), ", ") *
+                ".\nExpected table names follow TulipaEnergyModel conventions " *
+                "(e.g. asset, asset_both, asset_commission, asset_milestone, " *
+                "flow, flow_both, flow_commission, flow_milestone). " *
+                "Pass TulipaEnergyModel.schema to satisfy this requirement.",
+            ),
+        )
+    end
+end
+
 """
     create_empty_table_from_schema!(connection, table_name, schema, columns)
 
@@ -147,10 +181,25 @@ end
     create_connection(tulipa_data, schema, db)
 
 Creates a DuckDB connection and populates it with the data from `tulipa_data`.
-The `schema` should be a dict in the same format as `TulipaEnergyModel.schema`.
+
+The `schema` must be a `Dict{String, Dict{String, Dict{String, Any}}}` whose
+top-level keys are TulipaEnergyModel table names. The following table names are
+**required**:
+
+  - `"asset"`, `"asset_both"`, `"asset_commission"`, `"asset_milestone"`
+  - `"flow"`, `"flow_both"`, `"flow_commission"`, `"flow_milestone"`
+
+Each table entry maps column names to dicts with at least a `"type"` key and
+an optional `"default"` key. This structure matches `TulipaEnergyModel.schema`
+(derived from `input-schemas.json` in TulipaEnergyModel.jl), which is the
+intended source for this argument.
+
+Throws `ArgumentError` if any required table name is missing from `schema`.
+
 If `db` is not given, a memory connection is created.
 """
 function create_connection(tulipa::TulipaData, schema; db = ":memory:")
+    _validate_schema(schema)
     connection = DBInterface.connect(DuckDB.DB, db)
     run_query(s) = DuckDB.query(connection, s)
 
@@ -468,6 +517,7 @@ function create_connection(tulipa::TulipaData, schema; db = ":memory:")
         # Handle all profiles (stored with 4-tuple key: profile_type, milestone_year, commission_year, scenario)
         for ((profile_type, milestone_year, commission_year, scenario), profile_value) in
             asset.profiles
+
             profile_name = "$asset_name-$profile_type-$commission_year"
 
             # Use DataFrame for efficient bulk insertion
@@ -527,6 +577,7 @@ function create_connection(tulipa::TulipaData, schema; db = ":memory:")
                 (profile_type, milestone_year, commission_year, scenario),
                 profile_value,
             ) in flow.profiles
+
                 profile_name = "$from_asset_name-$to_asset_name-$profile_type-$commission_year"
                 profiles_df = DataFrame(
                     profile_name = profile_name,

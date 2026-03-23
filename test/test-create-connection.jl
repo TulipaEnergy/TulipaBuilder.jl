@@ -3,6 +3,28 @@
     const MIN_FLOW_TABLES = ["flow", "flow_commission", "flow_milestone"]
 end
 
+@testitem "create_connection throws ArgumentError for missing required schema tables" tags =
+    [:schema, :unit, :fast] setup = [CommonSetup, TestSchema] begin
+    tulipa = TulipaData()
+    add_asset!(tulipa, "producer", :producer)
+
+    # Schema missing all required tables
+    @test_throws ArgumentError create_connection(tulipa, Dict{String,Any}())
+
+    # Schema missing one required table
+    incomplete_schema = copy(TestSchema.schema)
+    delete!(incomplete_schema, "asset_both")
+    @test_throws ArgumentError create_connection(tulipa, incomplete_schema)
+
+    # Error message lists the missing table
+    err = try
+        create_connection(tulipa, incomplete_schema)
+    catch e
+        e
+    end
+    @test occursin("asset_both", err.msg)
+end
+
 @testitem "Create connection after add_asset" tags = [:schema] setup =
     [CommonSetup, CreateConnectionSetup, TestSchema] begin
     tulipa = TulipaData()
