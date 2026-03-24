@@ -202,7 +202,7 @@ end
 end
 
 @testitem "Integration test - demonstrates current system constraint with profiles" tags =
-    [:integration, :fast] setup = [CommonSetup] begin
+    [:integration, :fast, :schema] setup = [CommonSetup, TestSchema] begin
     # IMPORTANT: This test documents a current system constraint:
     # All years used in optimization MUST have profiles (which provide :length)
     # Since profiles always mark years as milestone, all functional years become milestone years
@@ -228,7 +228,7 @@ end
 
     # Demonstrate the constraint: create_connection fails on years without length
     @test_throws r"Not possible to determine length of year \d+\. Try attaching a profile" begin
-        create_connection(tulipa)
+        create_connection(tulipa, TestSchema.schema)
     end
 
     # To make years functional, must add profiles (which makes them milestone)
@@ -242,7 +242,7 @@ end
     @test tulipa.years[2030][:length] == 100         # Profile provided length
 
     # Now create_connection works
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TestSchema.schema)
 
     # Verify year_data table reflects the constraint
     year_data_df =

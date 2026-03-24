@@ -18,6 +18,7 @@ using TulipaBuilder:
     create_case_study_csv_folder
 using CSV: CSV
 using DataFrames: DataFrame, combine, groupby, nrow, groupindices
+using TulipaEnergyModel: TulipaEnergyModel as TEM
 
 tulipa = TulipaData{String}()
 
@@ -460,6 +461,6 @@ set_partition!(tulipa, "Asgard_Solar", "Asgard_Battery", 2030, 1, "math", "42x2+
 set_partition!(tulipa, "Asgard_Solar", "Asgard_Battery", 2030, 2, "math", "4x3+3x4")
 set_partition!(tulipa, "Asgard_Solar", "Asgard_E_demand", 2030, 2, "math", "3x4+4x3")
 
-connection = create_connection(tulipa)
+connection = create_connection(tulipa, TEM.schema)
 
-create_case_study_csv_folder(connection, joinpath(@__DIR__, "norse"))
+create_case_study_csv_folder(connection, TEM.schema, joinpath(@__DIR__, "norse"))

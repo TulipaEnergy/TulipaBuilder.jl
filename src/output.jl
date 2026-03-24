@@ -1,15 +1,20 @@
 export create_case_study_csv_folder
 
 """
-    create_case_study_csv_folder(connection, case_study_folder; overwrite = true)
+    create_case_study_csv_folder(connection, schema, case_study_folder; overwrite = true)
 
 Creates the CSV files that correspond to the Tulipa input tables in
 `connection` and saves them in the `case_study_folder`.
 If `overwrite`, then the files are overwritten if they exist.
 
-The tables that are exported are the ones that are defined in `TulipaEnergyModel.schema`, and the `profiles` table.
+The tables that are exported are the ones that are defined in `schema`, and the `profiles` table.
 """
-function create_case_study_csv_folder(connection, case_study_folder; overwrite = true)
+function create_case_study_csv_folder(
+    connection,
+    schema,
+    case_study_folder;
+    overwrite = true,
+)
     # Check if folder exists and handle overwrite logic
     if isdir(case_study_folder)
         if !overwrite && !isempty(readdir(case_study_folder))
@@ -25,7 +30,7 @@ function create_case_study_csv_folder(connection, case_study_folder; overwrite =
 
     # For every table in TEM.schema (keys of the dict),
     # export the table to CSV using DuckDB.query(connection, ...)
-    for table_name in keys(TEM.schema) ∪ ["profiles"] # profiles is explicitly here since TEM doesn't include it (not sure what TODO about it)
+    for table_name in keys(schema) ∪ ["profiles"] # profiles is explicitly here since schema doesn't include it (not sure what TODO about it)
         if !(table_name in existing_tables_in_connection)
             @debug "No table '$table_name' in the connection. Skipping"
             continue

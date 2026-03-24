@@ -24,8 +24,8 @@
     )
 end
 
-@testitem "Comparison of Tiny generated via TulipaBuilder" tags = [:integration] setup =
-    [CommonSetup, TinyFixes] begin
+@testitem "Comparison of Tiny generated via TulipaBuilder" tags =
+    [:integration, :tem_schema] setup = [CommonSetup, TinyFixes] begin
 
     tulipa = TulipaData{String}()
 
@@ -103,7 +103,7 @@ end
     attach_profile!(tulipa, "wind", :availability, 2030, df[!, "availability-wind"])
     # no profile for ocgt
 
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
 
     # External
     period_duration = 24

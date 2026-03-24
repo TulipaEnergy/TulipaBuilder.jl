@@ -92,7 +92,9 @@ plot!(plt, df[1:168, "demand-demand"], c=:green, lw=2, label="demand")
 Now we can create the connection with the data of the Tulipa problem using the `create_connection` function.
 
 ```@example basic
-connection = create_connection(tulipa)
+using TulipaEnergyModel: TulipaEnergyModel as TEM
+
+connection = create_connection(tulipa, TEM.schema)
 ```
 
 Notice that the profile names are automatically created from the attached data:

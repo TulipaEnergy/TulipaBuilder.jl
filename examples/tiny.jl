@@ -17,6 +17,7 @@ using TulipaBuilder:
     create_case_study_csv_folder
 using CSV: CSV
 using DataFrames: DataFrame
+using TulipaEnergyModel: TulipaEnergyModel as TEM
 
 tulipa = TulipaData{String}()
 
@@ -117,6 +118,6 @@ attach_profile!(tulipa, "demand", :demand, 2030, df[!, "demand-demand"])
 attach_profile!(tulipa, "wind", :availability, 2030, df[!, "availability-wind"])
 # no profile for ocgt
 
-connection = create_connection(tulipa)
+connection = create_connection(tulipa, TEM.schema)
 
-create_case_study_csv_folder(connection, joinpath(@__DIR__, "tiny"))
+create_case_study_csv_folder(connection, TEM.schema, joinpath(@__DIR__, "tiny"))

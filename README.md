@@ -16,7 +16,11 @@ TulipaBuilder.jl provides a graph-based approach to building energy system model
 ## Key Features
 
 - **Graph-based modeling**: Intuitive representation of energy systems as connected assets
-- **Schema-driven design**: Dynamically compatible with different TulipaEnergyModel.jl versions
+- **Schema-driven design**: Dynamically compatible with different TulipaEnergyModel.jl versions.
+  The `schema` argument passed to `create_connection` must be a dict keyed by TulipaEnergyModel
+  table names. The following table names are required: `asset`, `asset_both`, `asset_commission`,
+  `asset_milestone`, `flow`, `flow_both`, `flow_commission`, `flow_milestone`. Each entry maps
+  column names to type/default metadata. `TulipaEnergyModel.schema` satisfies this automatically.
 - **Simplified workflow**: Streamlined process from model creation to optimization
 
 ### Magic transformations

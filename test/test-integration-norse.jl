@@ -25,8 +25,8 @@
     )
 end
 
-@testitem "Comparison of Norse generated via TulipaBuilder" tags = [:integration] setup =
-    [CommonSetup, NorseFixes] begin
+@testitem "Comparison of Norse generated via TulipaBuilder" tags =
+    [:integration, :tem_schema] setup = [CommonSetup, NorseFixes] begin
 
     tulipa = TulipaData{String}()
 
@@ -496,7 +496,7 @@ end
     set_partition!(tulipa, "Asgard_Solar", "Asgard_Battery", 2030, 2, "math", "4x3+3x4")
     set_partition!(tulipa, "Asgard_Solar", "Asgard_E_demand", 2030, 2, "math", "3x4+4x3")
 
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
 
     # External
     period_duration = 24

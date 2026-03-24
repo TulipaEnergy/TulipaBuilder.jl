@@ -24,7 +24,7 @@
 end
 
 @testitem "Comparison of Multi-year Investments generated via TulipaBuilder" tags =
-    [:integration] setup = [CommonSetup, MultiYearFixes] begin
+    [:integration, :tem_schema] setup = [CommonSetup, MultiYearFixes] begin
 
     tulipa = TulipaData{String}()
 
@@ -372,7 +372,7 @@ end
     attach_profile!(tulipa, "demand", :demand, 2030, df[!, "demand-demand"])
     attach_profile!(tulipa, "demand", :demand, 2050, df[!, "demand-demand"])
 
-    connection = create_connection(tulipa)
+    connection = create_connection(tulipa, TEM.schema)
 
     # External clustering
     period_duration = 24

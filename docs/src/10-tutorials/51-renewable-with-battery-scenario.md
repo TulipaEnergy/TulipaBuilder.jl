@@ -105,7 +105,9 @@ end
 Now we can create the connection with the data of the Tulipa problem using the `create_connection` function.
 
 ```@example scenarios
-connection = create_connection(tulipa)
+using TulipaEnergyModel: TulipaEnergyModel as TEM
+
+connection = create_connection(tulipa, TEM.schema)
 ```
 
 Let's check the inserted profiles in the `profiles` table, which now contains the scenario information. Here we summarize the mean value per scenario and profile name to verify that the data was correctly inserted.
