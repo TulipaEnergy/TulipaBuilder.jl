@@ -15,6 +15,13 @@
     @test attach_milestone_data!(tulipa, "producer1", 2030) === tulipa
     @test attach_both_years_data!(tulipa, "producer1", 2030, 2030) === tulipa
     @test attach_profile!(tulipa, "producer1", :availability, 2030, rand(24)) === tulipa
+    @test attach_timeframe_profile!(
+        tulipa,
+        "producer1",
+        :max_storage_level,
+        2030,
+        rand(10),
+    ) === tulipa
 
     # attach_* functions (flow variants)
     @test attach_commission_data!(tulipa, "producer1", "consumer1", 2030) === tulipa
@@ -34,7 +41,9 @@ end
         attach_commission_data!,
         attach_milestone_data!,
         attach_both_years_data!,
-        attach_profile!
+        attach_profile!,
+        attach_timeframe_profile!,
+        set_partition!
 
     asset = TulipaAsset("test", :producer)
 
@@ -42,6 +51,7 @@ end
     @test attach_milestone_data!(asset, 2030, investable = true) === asset
     @test attach_both_years_data!(asset, 2030, 2030, initial_units = 1) === asset
     @test attach_profile!(asset, :availability, 2030, rand(24)) === asset
+    @test attach_timeframe_profile!(asset, :max_storage_level, 2030, rand(10)) === asset
     @test set_partition!(asset, 2030, 3, 4) === asset
     @test set_partition!(asset, 2030, 4, :explicit, "12;12") === asset
 end

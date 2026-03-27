@@ -26,6 +26,14 @@
         2030,
         ones(24),
     )
+    attach_timeframe_profile!(tulipa, "producer", :max_storage_level, 2030, ones(10))
+    @test_throws ExistingKeyError attach_timeframe_profile!(
+        tulipa,
+        "producer",
+        :max_storage_level,
+        2030,
+        ones(10),
+    )
     add_asset_group!(tulipa, "group", 2030)
     @test_throws ExistingKeyError add_asset_group!(tulipa, "group", 2030)
     set_partition!(tulipa, "producer", 2030, 1, 3)

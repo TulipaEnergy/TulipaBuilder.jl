@@ -14,6 +14,8 @@ mutable struct TulipaAsset{KeyType}
 
     profiles::Dict{Tuple{ProfileType,Int,Int,ScenarioType},Vector{Float64}}
 
+    timeframe_profiles::Dict{Tuple{ProfileType,Int,ScenarioType},Vector{Float64}}
+
     partitions::Dict{Tuple{Int,Int},Dict{Symbol,Any}}
 
     """
@@ -30,6 +32,7 @@ mutable struct TulipaAsset{KeyType}
             PerYear{Dict{Symbol,Any}}(),
             PerYear{Dict{Symbol,Any}}(),
             PerYears{Dict{Symbol,Any}}(),
+            Dict(),
             Dict(),
             Dict(),
         )
@@ -185,6 +188,31 @@ function attach_profile!(
         )
     end
     asset.profiles[key] = profile_value
+
+    return asset
+end
+
+"""
+    attach_timeframe_profile!(asset::TulipaAsset, profile_type, year, profile_value; scenario=DEFAULT_SCENARIO)
+
+Internal version of `attach_timeframe_profile!` acting directly on a `TulipaAsset` object.
+"""
+function attach_timeframe_profile!(
+    asset::TulipaAsset,
+    profile_type::ProfileType,
+    year::Int,
+    profile_value::Vector;
+    scenario::Int = DEFAULT_SCENARIO,
+)
+    key = (profile_type, year, scenario)
+    if haskey(asset.timeframe_profiles, key)
+        throw(
+            ExistingKeyError(
+                "Timeframe profile of type '$profile_type' for year '$year' and scenario '$scenario' already attached",
+            ),
+        )
+    end
+    asset.timeframe_profiles[key] = profile_value
 
     return asset
 end
