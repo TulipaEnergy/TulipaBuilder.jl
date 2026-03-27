@@ -126,6 +126,66 @@ end
     close(connection)
 end
 
+@testitem "All asset/flow and milestone year combinations are filled in %milestone, %commission, and %both tables" setup =
+    [CommonSetup, TestSchema] tags = [:unit, :fast, :schema] begin
+    tulipa = TulipaData{Symbol}()
+    add_asset!(tulipa, :asset1, :producer)
+    add_asset!(tulipa, :asset2, :producer)
+    add_flow!(tulipa, :asset1, :asset2, is_transport = true)
+    add_flow!(tulipa, :asset2, :asset1)
+    tulipa.years[2020] = Dict(:length => 1, :is_milestone => false)
+    tulipa.years[2025] = Dict(:length => 1, :is_milestone => true)
+    tulipa.years[2030] = Dict(:length => 1, :is_milestone => true)
+
+    connection = create_connection(tulipa, TestSchema.schema)
+
+    asset_milestone_pairs = Set(
+        (row.asset, row.milestone_year) for
+        row in DuckDB.query(connection, "FROM asset_milestone")
+    )
+    asset_commission_pairs = Set(
+        (row.asset, row.commission_year) for
+        row in DuckDB.query(connection, "FROM asset_commission")
+    )
+    asset_both_pairs = Set(
+        (row.asset, row.commission_year, row.milestone_year) for
+        row in DuckDB.query(connection, "FROM asset_both")
+    )
+    flow_milestone_pairs = Set(
+        (row.from_asset, row.to_asset, row.milestone_year) for
+        row in DuckDB.query(connection, "FROM flow_milestone")
+    )
+    flow_commission_pairs = Set(
+        (row.from_asset, row.to_asset, row.commission_year) for
+        row in DuckDB.query(connection, "FROM flow_commission")
+    )
+    flow_both_pairs = Set(
+        (row.from_asset, row.to_asset, row.commission_year, row.milestone_year) for
+        row in DuckDB.query(connection, "FROM flow_both")
+    )
+
+    expected_asset_pairs =
+        Set([("asset1", 2025), ("asset1", 2030), ("asset2", 2025), ("asset2", 2030)])
+    expected_asset_both_pairs = Set([(x[1], x[2], x[2]) for x in expected_asset_pairs])
+    expected_flow_pairs = Set([
+        ("asset1", "asset2", 2025),
+        ("asset1", "asset2", 2030),
+        ("asset2", "asset1", 2025),
+        ("asset2", "asset1", 2030),
+    ])
+    expected_flow_both_pairs =
+        Set([("asset1", "asset2", 2025, 2025), ("asset1", "asset2", 2030, 2030)])
+
+    @test asset_milestone_pairs == expected_asset_pairs
+    @test asset_commission_pairs == expected_asset_pairs
+    @test asset_both_pairs == expected_asset_both_pairs
+    @test flow_milestone_pairs == expected_flow_pairs
+    @test flow_commission_pairs == expected_flow_pairs
+    @test flow_both_pairs == expected_flow_both_pairs
+
+    close(connection)
+end
+
 @testitem "Test propagation from add_flow" setup = [CommonSetup, TestSchema] tags =
     [:unit, :fast, :schema] begin
     tulipa = TulipaData{Symbol}()
