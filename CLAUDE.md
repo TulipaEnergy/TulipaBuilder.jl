@@ -294,4 +294,24 @@ end
 
 #### Key Development Rule
 
-**When testing new tests, use the CLI approach to filter only the relevant files to test.**
+**When testing new tests, use filtering to run only the relevant files.**
+
+#### Running Tests via [Julia MCP](https://github.com/aplavin/julia-mcp)
+
+When using the Julia MCP (`julia_eval`), point `env_path` at `test/` — it has its own `Project.toml` with the package registered as a path source, so no extra setup or `TestEnv` is needed. Use `@run_package_tests` directly (the CLI runner's `runtests.jl` relies on `ARGS` and won't work in a REPL):
+
+```julia
+# Run all tests
+@run_package_tests verbose=true
+
+# Filter by file
+@run_package_tests verbose=true filter = ti -> contains(ti.filename, "test-structures")
+
+# Filter by tags (AND logic)
+@run_package_tests verbose=true filter = ti -> all(tag in ti.tags for tag in [:unit, :fast])
+
+# Exclude slow tests
+@run_package_tests verbose=true filter = ti -> !any(tag in ti.tags for tag in [:slow])
+```
+
+The `ti` object has `.filename`, `.tags`, and `.name` fields — matching the same logic as `_create_filter` in the CLI runner.
