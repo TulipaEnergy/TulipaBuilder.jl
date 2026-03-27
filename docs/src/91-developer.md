@@ -68,12 +68,40 @@ lychee --no-progress --config lychee.toml .
 
 ## Testing
 
-As with most Julia packages, you can just open Julia in the repository folder, activate the environment, and run `test`:
+As with most Julia packages, you can open Julia in the repository folder, activate the environment, and run `test`:
 
 ```julia-repl
 julia> # press ]
 pkg> activate .
 pkg> test
+```
+
+### CLI runner with filtering
+
+The test suite includes a CLI runner with filtering support:
+
+```bash
+# Run all tests
+julia --project=test test/runtests.jl
+
+# Filter by file, tags, or name
+julia --project=test test/runtests.jl --file test-structures
+julia --project=test test/runtests.jl --tags unit,fast --exclude slow
+julia --project=test test/runtests.jl --name "some test name"
+```
+
+### Running tests via Julia MCP
+
+If you use [julia-mcp](https://github.com/aplavin/julia-mcp) with a Coding Agent, you can run tests directly in a persistent Julia session. Point `env_path` at `test/` (no `TestEnv` needed — the test project already declares `TulipaBuilder` as a path source) and use `@run_package_tests` directly, since the CLI runner relies on `ARGS` and won't work in a REPL:
+
+```julia
+using TestItemRunner
+@run_package_tests verbose=true
+
+# With filtering
+@run_package_tests verbose=true filter = ti -> contains(ti.filename, "test-structures")
+@run_package_tests verbose=true filter = ti -> all(tag in ti.tags for tag in [:unit, :fast])
+@run_package_tests verbose=true filter = ti -> !any(tag in ti.tags for tag in [:slow])
 ```
 
 ## Working on a new issue
