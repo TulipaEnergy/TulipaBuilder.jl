@@ -296,9 +296,11 @@ end
 
 **When testing new tests, use filtering to run only the relevant files.**
 
-#### Running Tests via [Julia MCP](https://github.com/aplavin/julia-mcp)
+#### Running Tests via [Julia MCP](https://github.com/aplavin/julia-mcp) (Preferred)
 
-When using the Julia MCP (`julia_eval`), point `env_path` at `test/` — it has its own `Project.toml` with the package registered as a path source, so no extra setup or `TestEnv` is needed. Use `@run_package_tests` directly (the CLI runner's `runtests.jl` relies on `ARGS` and won't work in a REPL):
+**When the Julia MCP (`julia_eval`) is available, always prefer it over the CLI runner for testing.** It keeps a warm Julia session, avoiding recompilation overhead on each run.
+
+Point `env_path` at `test/` — it has its own `Project.toml` with the package registered as a path source, so no extra setup or `TestEnv` is needed. Use `@run_package_tests` directly (the CLI runner's `runtests.jl` relies on `ARGS` and won't work in a REPL):
 
 ```julia
 # Run all tests

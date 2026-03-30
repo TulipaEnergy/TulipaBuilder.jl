@@ -22,6 +22,8 @@
     unfixable_missing_columns = Dict(
         "asset" => ["min_operating_point", "max_ramp_down", "max_ramp_up"],
         "assets_profiles" => ["profile_name"],
+        "assets_timeframe_profiles" => ["profile_name"],
+        "profiles_timeframe" => ["profile_name"],
     )
 end
 
@@ -461,6 +463,21 @@ end
     )
     attach_profile!(tulipa, "Midgard_Hydro", :inflows, 2030, df[!, "inflows-Midgard_Hydro"])
 
+    # Timeframe profiles
+    norse_folder = joinpath(pkgdir(TEM), "test", "inputs", "Norse")
+    tf_df = DataFrame(CSV.File(joinpath(norse_folder, "profiles-timeframe.csv")))
+    for profile_name in unique(tf_df.profile_name)
+        rows = filter(r -> r.profile_name == profile_name, tf_df)
+        rows_sorted = sort(rows, :period)
+        # profile_name format is "profile_type-asset_name"
+        parts = split(profile_name, "-"; limit = 2)
+        profile_type = Symbol(parts[1])
+        asset_name = String(parts[2])
+        year = rows_sorted[1, :milestone_year]
+        profile_value = rows_sorted[!, :value]
+        attach_timeframe_profile!(tulipa, asset_name, profile_type, year, profile_value)
+    end
+
     # Flows profiles
     attach_profile!(
         tulipa,
@@ -526,8 +543,6 @@ end
             "profiles_rep_periods", # Ignored because it's clustering-specific
             "timeframe_data", # Ignored because it's clustering-specific
             "flows_profiles", # Ignored because it's clustering-specific
-            "profiles_timeframe", # Ignored because it's clustering-specific
-            "assets_timeframe_profiles", # TODO: This should be handled eventually
             "assets_timeframe_partitions", # TODO: This should be handled eventually
         ]
             continue

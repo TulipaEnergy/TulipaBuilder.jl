@@ -102,6 +102,23 @@ end
     ]
 end
 
+@testitem "Create connection after attach_timeframe_profile!" tags = [:schema] setup =
+    [CommonSetup, CreateConnectionSetup, TestSchema] begin
+    tulipa = TulipaData()
+    add_asset!(tulipa, "storage", :storage)
+    attach_profile!(tulipa, "storage", :availability, 2030, ones(24))
+    attach_timeframe_profile!(tulipa, "storage", :max_storage_level, 2030, ones(10))
+    connection = create_connection(tulipa, TestSchema.schema)
+    @test get_non_empty_tables(connection) == [
+        MIN_ASSET_TABLES
+        "assets_profiles"
+        "assets_timeframe_profiles"
+        "profiles"
+        "profiles_timeframe"
+        "year_data"
+    ]
+end
+
 @testitem "Create connection after add_asset_group" tags = [:schema] setup =
     [CommonSetup, CreateConnectionSetup, TestSchema] begin
     tulipa = TulipaData()

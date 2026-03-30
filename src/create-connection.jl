@@ -611,6 +611,57 @@ function create_connection(tulipa::TulipaData, schema; db = ":memory:")
         end
     end
 
+    # Tables profiles_timeframe and assets_timeframe_profiles
+    DuckDB.query(
+        connection,
+        "CREATE OR REPLACE TABLE profiles_timeframe (
+            profile_name VARCHAR,
+            milestone_year INT64,
+            period INT64,
+            value DOUBLE,
+        )",
+    )
+    DuckDB.query(
+        connection,
+        "CREATE OR REPLACE TABLE assets_timeframe_profiles (
+            asset VARCHAR,
+            milestone_year INT64,
+            scenario INT64,
+            profile_type VARCHAR,
+            profile_name VARCHAR,
+        )",
+    )
+    for asset_name in MetaGraphsNext.labels(tulipa.graph)
+        asset = tulipa.graph[asset_name]
+        for ((profile_type, year, scenario), profile_value) in asset.timeframe_profiles
+            profile_name = "$asset_name-$profile_type-$year-$scenario"
+
+            profiles_tf_df = DataFrame(
+                profile_name = profile_name,
+                milestone_year = year,
+                period = 1:length(profile_value),
+                value = profile_value,
+            )
+            DuckDB.register_data_frame(connection, profiles_tf_df, "tmp_profile_tf")
+            DuckDB.query(
+                connection,
+                "INSERT INTO profiles_timeframe BY NAME (SELECT * FROM tmp_profile_tf)",
+            )
+            DuckDB.query(connection, "DROP VIEW tmp_profile_tf")
+
+            DuckDB.query(
+                connection,
+                "INSERT INTO assets_timeframe_profiles BY NAME (SELECT
+                    '$asset_name' AS asset,
+                    $year AS milestone_year,
+                    $scenario AS scenario,
+                    '$profile_type' AS profile_type,
+                    '$profile_name' AS profile_name,
+                )",
+            )
+        end
+    end
+
     DuckDB.query(
         connection,
         "CREATE OR REPLACE TABLE year_data (

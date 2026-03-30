@@ -6,6 +6,7 @@ export TulipaData,
     attach_milestone_data!,
     attach_both_years_data!,
     attach_profile!,
+    attach_timeframe_profile!,
     add_asset_group!,
     set_partition!
 
@@ -351,6 +352,32 @@ function attach_profile!(
         commission_year,
         scenario,
     )
+    return tulipa
+end
+
+"""
+    attach_timeframe_profile!(tulipa_data, asset_name, profile_type, year, profile_value; scenario=DEFAULT_SCENARIO)
+
+Attach the timeframe profile vector `profile_value` to the asset named `asset_name`
+of the type `profile_type` for `year`.
+
+For the definition of timeframes, see the
+[TulipaEnergyModel concepts](https://tulipaenergy.github.io/TulipaEnergyModel.jl/stable/30-concepts/#concepts-summary).
+
+`year` is registered as a milestone year. The year length is NOT inferred from
+this profile (use `attach_profile!` or `add_or_update_year!` to set it).
+"""
+function attach_timeframe_profile!(
+    tulipa::TulipaData{KeyType},
+    asset_name::KeyType,
+    profile_type::ProfileType,
+    year::Int,
+    profile_value::Vector;
+    scenario::Int = DEFAULT_SCENARIO,
+) where {KeyType}
+    add_or_update_year!(tulipa, year, is_milestone = true)
+    asset = tulipa.graph[asset_name]
+    attach_timeframe_profile!(asset, profile_type, year, profile_value; scenario)
     return tulipa
 end
 

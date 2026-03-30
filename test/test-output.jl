@@ -73,6 +73,19 @@
                 timestep = Int[],
                 value = Float64[],
             ),
+            :profiles_timeframe => DataFrame(
+                profile_name = String[],
+                milestone_year = Int[],
+                period = Int[],
+                value = Float64[],
+            ),
+            :assets_timeframe_profiles => DataFrame(
+                asset = String[],
+                milestone_year = Int[],
+                scenario = Int[],
+                profile_type = String[],
+                profile_name = String[],
+            ),
             :year_data =>
                 DataFrame(year = Int[], length = Int[], is_milestone = Bool[]),
         )
@@ -179,6 +192,25 @@ end
     manual_data[:flow_milestone].operational_cost = Float64[]
     push!(manual_data[:flow_milestone], ("ccgt", "Hub", 2030, 4.0))
     # push!(manual_data[:flow_both], ("ccgt", "Hub", 2030, 2030)) # ERROR: Should this be here?
+
+    data = create_and_get_data(tulipa, TEM.schema)
+    test_that_tables_are_equivalent(data, manual_data)
+
+    ## Stage 4 - attach timeframe profile
+
+    tf_profile = collect(0.1:0.1:1.0)
+    attach_timeframe_profile!(tulipa, "ccgt", :max_storage_level, 2030, tf_profile)
+
+    push!(
+        manual_data[:assets_timeframe_profiles],
+        ("ccgt", 2030, 1, "max_storage_level", "ccgt-max_storage_level-2030-1"),
+    )
+    for (i, x) in enumerate(tf_profile)
+        push!(
+            manual_data[:profiles_timeframe],
+            ("ccgt-max_storage_level-2030-1", 2030, i, x),
+        )
+    end
 
     data = create_and_get_data(tulipa, TEM.schema)
     test_that_tables_are_equivalent(data, manual_data)
