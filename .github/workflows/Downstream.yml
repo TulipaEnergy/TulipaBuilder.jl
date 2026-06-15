@@ -29,7 +29,7 @@ jobs:
       matrix: ${{ fromJSON(needs.set_matrix.outputs.matrix) }}
 
     steps:
-      - uses: julia-actions/setup-julia@v2
+      - uses: julia-actions/setup-julia@v3
         with:
           version: 1
           arch: x64
