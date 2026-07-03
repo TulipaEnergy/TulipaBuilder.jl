@@ -15,7 +15,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set_matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - id: set_matrix
         run: |
           echo "matrix=$(jq -c '{include: [.[] | {package, user, version} + (.extra // {})]}' .github/downstream.json)" >> "$GITHUB_OUTPUT"
@@ -33,9 +33,9 @@ jobs:
         with:
           version: 1
           arch: x64
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: julia-actions/julia-buildpkg@v1
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           repository: ${{ matrix.user }}/${{ matrix.package }}.jl
           fetch-tags: true
