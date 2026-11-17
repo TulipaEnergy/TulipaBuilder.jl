@@ -716,11 +716,13 @@ function create_connection(tulipa::TulipaData, schema; db = ":memory:")
     end
 
     # Complement the asset_both tables with rows from asset_milestone
-    ## Only check for 'compact' if the investment_method column exists
-    has_investment_method_column = any(
-        haskey(tulipa.graph[asset_name].basic_data, :investment_method) for
-        asset_name in MetaGraphsNext.labels(tulipa.graph)
-    )
+    ## Only check for 'compact' if the investment_method column exists in the
+    ## schema and was set for at least one asset
+    has_investment_method_column =
+        haskey(schema["asset"], "investment_method") && any(
+            haskey(tulipa.graph[asset_name].basic_data, :investment_method) for
+            asset_name in MetaGraphsNext.labels(tulipa.graph)
+        )
     where_investment_method = if has_investment_method_column
         "WHERE asset.investment_method NOT IN ('compact', 'semi-compact')"
     else
