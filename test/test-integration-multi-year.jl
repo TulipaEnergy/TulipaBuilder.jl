@@ -48,7 +48,7 @@ end
         investment_integer = true,
         technical_lifetime = 30,
         capacity_storage_energy = 100.0,
-        storage_method_energy = true,
+        storage_method_energy = "optimize_storage_capacity",
         storage_charging_efficiency = 0.95,
         storage_discharging_efficiency = 0.95,
     )
