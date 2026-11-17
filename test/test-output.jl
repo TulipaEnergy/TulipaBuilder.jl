@@ -86,8 +86,6 @@
                 profile_type = String[],
                 profile_name = String[],
             ),
-            :year_data =>
-                DataFrame(year = Int[], length = Int[], is_milestone = Bool[]),
         )
 
         return data
@@ -172,8 +170,6 @@ end
     for (i, x) in enumerate(ccgt_profile)
         push!(manual_data[:profiles], ("ccgt-availability-2030", 2030, 1, i, x))
     end
-
-    push!(manual_data[:year_data], (2030, 24, 1.0))
 
     data = create_and_get_data(tulipa, TEM.schema)
     test_that_tables_are_equivalent(data, manual_data)

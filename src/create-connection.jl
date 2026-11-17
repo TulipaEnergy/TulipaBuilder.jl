@@ -769,9 +769,11 @@ function create_connection(tulipa::TulipaData, schema; db = ":memory:")
         end
     end
 
+    # Internal helper table: TEM does not have a year_data table, so it must not
+    # remain in the connection. It is dropped after the loop below.
     DuckDB.query(
         connection,
-        "CREATE OR REPLACE TABLE year_data (
+        "CREATE OR REPLACE TEMP TABLE year_data (
             year INT64,
             length INT64,
             is_milestone BOOLEAN,
@@ -821,6 +823,8 @@ function create_connection(tulipa::TulipaData, schema; db = ":memory:")
             ",
         )
     end
+
+    DuckDB.query(connection, "DROP TABLE year_data")
 
     # Complement the asset_both tables with rows from asset_milestone
     ## Only check for 'compact' if the investment_method column exists in the

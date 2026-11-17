@@ -244,13 +244,11 @@ end
     # Now create_connection works
     connection = create_connection(tulipa, TestSchema.schema)
 
-    # Verify year_data table reflects the constraint
-    year_data_df =
-        DuckDB.query(connection, "SELECT * FROM year_data ORDER BY year") |> DataFrame
-    @test size(year_data_df, 1) == 2
-    @test year_data_df.year == [2025, 2030]
-    @test year_data_df.length == [24, 100]
-    @test all(year_data_df.is_milestone .== true)  # ALL functional years are milestone (constraint)
+    # year_data is internal to create_connection and must not remain in the connection
+    @test !(
+        "year_data" in
+        get_vector_from_duckdb_query(connection, "SELECT table_name FROM duckdb_tables()")
+    )
 
     # This test documents that in the current system:
     # - Commission-only years cannot be used in optimization

@@ -36,7 +36,7 @@ end
     add_asset!(tulipa, "producer", :producer, capacity = 1.0)
     add_or_update_year!(tulipa, 2030, length = 24, is_milestone = true)
     connection = create_connection(tulipa, TestSchema.schema)
-    @test get_non_empty_tables(connection) == [MIN_ASSET_TABLES; "year_data"]
+    @test get_non_empty_tables(connection) == MIN_ASSET_TABLES
 end
 
 @testitem "Create connection after add_flow" tags = [:schema] setup =
@@ -54,8 +54,7 @@ end
     add_flow!(tulipa, "producer", "consumer")
     add_or_update_year!(tulipa, 2030, length = 24, is_milestone = true)
     connection = create_connection(tulipa, TestSchema.schema)
-    @test get_non_empty_tables(connection) ==
-          [MIN_ASSET_TABLES; MIN_FLOW_TABLES; "year_data"]
+    @test get_non_empty_tables(connection) == [MIN_ASSET_TABLES; MIN_FLOW_TABLES]
 end
 
 @testitem "Create connection after attach_profile" tags = [:schema] setup =
@@ -65,7 +64,7 @@ end
     attach_profile!(tulipa, "producer", :availability, 2030, ones(24))
     connection = create_connection(tulipa, TestSchema.schema)
     @test get_non_empty_tables(connection) ==
-          [MIN_ASSET_TABLES; "assets_profiles"; "profiles"; "year_data"]
+          [MIN_ASSET_TABLES; "assets_profiles"; "profiles"]
 
     tulipa = TulipaData()
     add_asset!(tulipa, "producer", :producer)
@@ -74,7 +73,7 @@ end
     attach_profile!(tulipa, "producer", :availability, 2030, ones(24))
     connection = create_connection(tulipa, TestSchema.schema)
     @test get_non_empty_tables(connection) ==
-          [MIN_ASSET_TABLES; "assets_profiles"; MIN_FLOW_TABLES; "profiles"; "year_data"]
+          [MIN_ASSET_TABLES; "assets_profiles"; MIN_FLOW_TABLES; "profiles"]
 
     tulipa = TulipaData()
     add_asset!(tulipa, "producer", :producer)
@@ -83,7 +82,7 @@ end
     attach_profile!(tulipa, "producer", "consumer", :inflows, 2030, ones(24))
     connection = create_connection(tulipa, TestSchema.schema)
     @test get_non_empty_tables(connection) ==
-          [MIN_ASSET_TABLES; MIN_FLOW_TABLES; "flows_profiles"; "profiles"; "year_data"]
+          [MIN_ASSET_TABLES; MIN_FLOW_TABLES; "flows_profiles"; "profiles"]
 
     tulipa = TulipaData()
     add_asset!(tulipa, "producer", :producer)
@@ -98,7 +97,6 @@ end
         MIN_FLOW_TABLES
         "flows_profiles"
         "profiles"
-        "year_data"
     ]
 end
 
@@ -115,7 +113,6 @@ end
         "assets_timeframe_profiles"
         "profiles"
         "profiles_timeframe"
-        "year_data"
     ]
 end
 
