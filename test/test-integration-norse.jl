@@ -501,6 +501,15 @@ end
         "28x3+42x2",
     )
     set_partition!(tulipa, "Asgard_Solar", "Asgard_Battery", 2030, 1, "math", "42x2+28x3")
+    set_partition!(
+        tulipa,
+        "Midgard_Hydro",
+        "Midgard_E_demand",
+        2030,
+        1,
+        "math",
+        "28x3+42x2",
+    )
     set_partition!(tulipa, "Asgard_Solar", "Asgard_Battery", 2030, 2, "math", "4x3+3x4")
     set_partition!(tulipa, "Asgard_Solar", "Asgard_E_demand", 2030, 2, "math", "3x4+4x3")
 
