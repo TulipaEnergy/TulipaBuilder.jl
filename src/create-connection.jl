@@ -174,6 +174,113 @@ function propagate_year_data!(tulipa, schema)
     end
 end
 
+"""
+    _create_investment_group_tables!(connection, tulipa_data, schema)
+
+Creates the tables `investment_group_asset` and `investment_group_asset_membership`
+from the groups added with [`add_asset_group!`](@ref) and the assets that set
+`investment_group`.
+
+A group's `min_investment_limit` becomes a row with `constraint_sense = '>='`,
+and `max_investment_limit` a row with `constraint_sense = '<='`, both with the
+limit as `rhs`. A group can only have one of these limits, because
+TulipaEnergyModel needs a unique group name per row and year. Other keywords of
+the group are stored as given, if the schema has them.
+
+Each asset whose `investment_group` matches a group name becomes a member of
+that group for each year of the group. Its `coefficient` is the asset
+`capacity`, so the limit applies to the invested capacity, as in
+TulipaEnergyModel's migration of the old `group_asset` table.
+
+This function is for internal use only.
+"""
+function _create_investment_group_tables!(connection, tulipa, schema)
+    group_table = "investment_group_asset"
+    membership_table = "investment_group_asset_membership"
+    limit_senses = (min_investment_limit = ">=", max_investment_limit = "<=")
+
+    # Table investment_group_asset
+    group_rows = Dict{Tuple{Any,Int},Dict{Symbol,Any}}()
+    for ((group_name, year), group_data) in tulipa.asset_groups
+        limits = [key for key in keys(limit_senses) if haskey(group_data, key)]
+        if length(limits) > 1
+            throw(
+                ArgumentError(
+                    "Asset group '$group_name' ($year) has both min_investment_limit " *
+                    "and max_investment_limit. TulipaEnergyModel needs one group per " *
+                    "limit, so add two groups with different names instead.",
+                ),
+            )
+        end
+        row = Dict{Symbol,Any}(
+            key => value for (key, value) in group_data if !haskey(limit_senses, key)
+        )
+        for key in limits
+            row[:constraint_sense] = limit_senses[key]
+            row[:rhs] = group_data[key]
+        end
+        group_rows[(group_name, year)] = row
+    end
+
+    columns = [
+        "name"
+        "milestone_year"
+        unique([string(key) for row in values(group_rows) for key in keys(row)])
+    ]
+    create_empty_table_from_schema!(connection, group_table, schema[group_table], columns)
+    for ((group_name, year), row) in group_rows
+        query = """INSERT INTO $group_table BY NAME (
+            SELECT '$group_name' AS name, $year AS milestone_year,"""
+        for (key, value) in row
+            query *= _get_select_query_row(schema, key, value, group_table)
+        end
+        query *= ")"
+        DuckDB.query(connection, query)
+    end
+
+    # Table investment_group_asset_membership
+    create_empty_table_from_schema!(
+        connection,
+        membership_table,
+        schema[membership_table],
+        ["asset", "group_name", "milestone_year", "coefficient"],
+    )
+    capacity_schema = get(schema["asset"], "capacity", nothing)
+    for asset_name in MetaGraphsNext.labels(tulipa.graph)
+        asset = tulipa.graph[asset_name]
+        if !haskey(asset.basic_data, :investment_group)
+            continue
+        end
+        asset_group = string(asset.basic_data[:investment_group])
+        coefficient = if isnothing(capacity_schema)
+            nothing
+        else
+            get(asset.basic_data, :capacity, get(capacity_schema, "default", nothing))
+        end
+        for (group_name, year) in keys(tulipa.asset_groups)
+            if string(group_name) != asset_group
+                continue
+            end
+            query = """INSERT INTO $membership_table BY NAME (
+                SELECT '$asset_name' AS asset,
+                    '$group_name' AS group_name,
+                    $year AS milestone_year,"""
+            if !isnothing(coefficient)
+                query *= _get_select_query_row(
+                    schema,
+                    :coefficient,
+                    coefficient,
+                    membership_table,
+                )
+            end
+            query *= ")"
+            DuckDB.query(connection, query)
+        end
+    end
+
+    return connection
+end
+
 # IDEA: function for_each_asset(f, tulipa)
 
 """
@@ -746,29 +853,9 @@ function create_connection(tulipa::TulipaData, schema; db = ":memory:")
         ",
     )
 
-    # group_asset tables
+    # Investment group tables
     if length(tulipa.asset_groups) > 0
-        create_empty_table_from_schema!(
-            connection,
-            "group_asset",
-            schema["group_asset"],
-            [
-                "name",
-                "milestone_year",
-                "invest_method",
-                "min_investment_limit",
-                "max_investment_limit",
-            ],
-        )
-        for ((group_name, year), group_data) in tulipa.asset_groups
-            query = """INSERT INTO group_asset BY NAME (
-                SELECT '$group_name' AS name, $year AS milestone_year,"""
-            for (key, value) in group_data
-                query *= _get_select_query_row(schema, key, value, "group_asset")
-            end
-            query *= ")"
-            run_query(query)
-        end
+        _create_investment_group_tables!(connection, tulipa, schema)
     end
 
     # Table assets_rep_periods_partitions

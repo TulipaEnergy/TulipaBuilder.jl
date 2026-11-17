@@ -35,7 +35,7 @@ end
     # producer assets
     producers = Dict(
         "Asgard_Solar" => (;
-            investment_group = "renewables",
+            investment_group = "renewables_max",
             capacity = 100.0,
             investment_method = "simple",
             investment_integer = true,
@@ -68,7 +68,7 @@ end
             initial_units = 6.6666667,
         ),
         "Midgard_Wind" => (;
-            investment_group = "renewables",
+            investment_group = "renewables_max",
             capacity = 3.0,
             investment_method = "simple",
             investment_integer = true,
@@ -123,7 +123,7 @@ end
         tulipa,
         "Asgard_CCGT",
         :conversion,
-        investment_group = "ccgt",
+        investment_group = "ccgt_min",
         capacity = 500.0,
         investment_cost = 650.0,
         min_operating_point = 0.25,
@@ -144,7 +144,8 @@ end
         tulipa,
         "Midgard_CCGT",
         :conversion,
-        investment_group = "ccgt",
+        investment_group = "ccgt_min",
+        investable = true, # TEM requires members of investment groups to be investable
         capacity = 500.0,
         investment_cost = 650.0,
         min_operating_point = 0.4,
@@ -276,14 +277,14 @@ end
     # group assets
     add_asset_group!(
         tulipa,
-        "renewables",
+        "renewables_max",
         2030,
         invest_method = true,
         max_investment_limit = 40000,
     )
     add_asset_group!(
         tulipa,
-        "ccgt",
+        "ccgt_min",
         2030,
         invest_method = true,
         min_investment_limit = 10000,
