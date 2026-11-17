@@ -394,6 +394,15 @@ end
         FROM rep_periods_data
         """,
     )
+    # TB has no API for model_parameters yet, so the test writes it directly.
+    # The other columns get their defaults from populate_with_defaults!.
+    DuckDB.query(
+        connection,
+        """
+        CREATE TABLE model_parameters AS
+        SELECT 2020 AS discount_year, 0.03 AS discount_rate
+        """,
+    )
     TEM.populate_with_defaults!(connection)
 
     # Comparison
