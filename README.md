@@ -23,6 +23,12 @@ TulipaBuilder.jl provides a graph-based approach to building energy system model
   column names to type/default metadata. `TulipaEnergyModel.schema` satisfies this automatically.
 - **Simplified workflow**: Streamlined process from model creation to optimization
 
+### Supported TulipaEnergyModel versions
+
+TulipaBuilder supports the latest minor release of TulipaEnergyModel.
+Older releases may work, but we do not test them.
+This holds at least until a 1.0 release of both TulipaEnergyModel and TulipaBuilder.
+
 ### Magic transformations
 
 TulipaBuilder.jl takes liberties when creating TulipaEnergyModel problems.
