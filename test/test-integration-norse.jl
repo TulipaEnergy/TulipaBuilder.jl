@@ -269,14 +269,14 @@ end
         tulipa,
         "renewables_max",
         2030,
-        invest_method = true,
+        invest_method = "use_only_investment_units",
         max_investment_limit = 40000,
     )
     add_asset_group!(
         tulipa,
         "ccgt_min",
         2030,
-        invest_method = true,
+        invest_method = "use_only_investment_units",
         min_investment_limit = 10000,
     )
 

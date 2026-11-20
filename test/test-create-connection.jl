@@ -119,7 +119,7 @@ end
 @testitem "Create connection after add_asset_group" tags = [:schema] setup =
     [CommonSetup, CreateConnectionSetup, TestSchema] begin
     tulipa = TulipaData()
-    add_asset_group!(tulipa, "group", 2030, invest_method = true)
+    add_asset_group!(tulipa, "group", 2030, invest_method = "use_only_investment_units")
     connection = create_connection(tulipa, TestSchema.schema)
     @test get_non_empty_tables(connection) == ["investment_group_asset"]
 end
@@ -135,14 +135,14 @@ end
         tulipa,
         "res_max",
         2030,
-        invest_method = true,
+        invest_method = "use_only_investment_units",
         max_investment_limit = 40,
     )
     add_asset_group!(
         tulipa,
         "ccgt_min",
         2030,
-        invest_method = true,
+        invest_method = "use_only_investment_units",
         min_investment_limit = 10,
     )
     connection = create_connection(tulipa, TestSchema.schema)
@@ -151,7 +151,7 @@ end
         DataFrame(DuckDB.query(connection, "FROM investment_group_asset ORDER BY name"))
     @test groups.name == ["ccgt_min", "res_max"]
     @test groups.milestone_year == [2030, 2030]
-    @test groups.invest_method == [true, true]
+    @test groups.invest_method == fill("use_only_investment_units", 2)
     @test groups.constraint_sense == [">=", "<="]
     @test groups.rhs == [10.0, 40.0]
 
