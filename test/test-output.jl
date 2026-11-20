@@ -86,8 +86,6 @@
                 profile_type = String[],
                 profile_name = String[],
             ),
-            :year_data =>
-                DataFrame(year = Int[], length = Int[], is_milestone = Bool[]),
         )
 
         return data
@@ -140,7 +138,7 @@ end
         "ccgt",
         :producer,
         capacity = 2.0,
-        investment_method = "simple",
+        vintage_method = "aggregated",
         investable = true, # ignored until an year is introduced
         investment_cost = 3.0, # ignored until an year is introduced
     )
@@ -148,9 +146,9 @@ end
     manual_data = manual_empty_data()
 
     manual_data[:asset].capacity = Float64[]
-    manual_data[:asset].investment_method = String[]
+    manual_data[:asset].vintage_method = String[]
     # notice that it is all string because of the conversion to CSV and back
-    push!(manual_data[:asset], ("ccgt", "producer", 2.0, "simple"))
+    push!(manual_data[:asset], ("ccgt", "producer", 2.0, "aggregated"))
 
     data = create_and_get_data(tulipa, TEM.schema)
     test_that_tables_are_equivalent(data, manual_data)
@@ -173,8 +171,6 @@ end
         push!(manual_data[:profiles], ("ccgt-availability-2030", 2030, 1, i, x))
     end
 
-    push!(manual_data[:year_data], (2030, 24, 1.0))
-
     data = create_and_get_data(tulipa, TEM.schema)
     test_that_tables_are_equivalent(data, manual_data)
 
@@ -183,7 +179,7 @@ end
     add_asset!(tulipa, "Hub", :hub)
     add_flow!(tulipa, "ccgt", "Hub", operational_cost = 4.0)
 
-    push!(manual_data[:asset], ("Hub", "hub", 0.0, "none"))
+    push!(manual_data[:asset], ("Hub", "hub", 0.0, "aggregated"))
     push!(manual_data[:asset_commission], ("Hub", 2030, 0.0))
     push!(manual_data[:asset_milestone], ("Hub", 2030, false))
     push!(manual_data[:asset_both], ("Hub", 2030, 2030))

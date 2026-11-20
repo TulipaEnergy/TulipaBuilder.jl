@@ -386,6 +386,16 @@ end
 
 
 Add a new asset group `group_name` for the given `year`.
+
+Assets join the group by setting `investment_group = group_name` in
+[`add_asset!`](@ref). In [`create_connection`](@ref), the group becomes a row of
+`investment_group_asset`, and each member becomes a row of
+`investment_group_asset_membership` with the asset `capacity` as coefficient.
+
+The keyword `min_investment_limit` becomes `constraint_sense = ">="` and
+`max_investment_limit` becomes `constraint_sense = "<="`, with the limit as
+`rhs`. A group can have only one of these limits. To limit the same assets from
+both sides, TulipaEnergyModel needs two groups with different names.
 """
 function add_asset_group!(
     tulipa::TulipaData{KeyType},

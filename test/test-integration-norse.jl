@@ -12,7 +12,7 @@
         # flow
         technical_lifetime = 10,            # default is 1
         discount_rate = 0.02,               # default is 0.0
-        investment_limit = 0.0,             # default is null
+        investment_max_limit = 0.0,             # default is null
     )
 
     # Most of these are `missing` in the expected tables, so populate_with_defaults will
@@ -35,30 +35,28 @@ end
     # producer assets
     producers = Dict(
         "Asgard_Solar" => (;
-            investment_group = "renewables",
+            investment_group = "renewables_max",
             capacity = 100.0,
-            investment_method = "simple",
             investment_integer = true,
             investable = true,
             investment_cost = 350.0,
-            investment_limit = 50000.0,
+            investment_max_limit = 50000.0,
         ),
         "G_imports" => (;
             capacity = 75000.0,
             decommissionable = true,
             initial_units = 1.0,
-            investment_limit = 0.0,
+            investment_max_limit = 0.0,
         ),
         "Midgard_E_imports" => (;
             capacity = 500.0,
             decommissionable = true,
             initial_units = 1.0,
-            investment_limit = 0.0,
+            investment_max_limit = 0.0,
         ),
         "Midgard_Nuclear_SMR" => (;
             capacity = 150.0,
-            investment_method = "simple",
-            is_seasonal = true,
+            use_inter_period_constraints = true,
             ramping = true,
             max_ramp_up = 0.75,
             max_ramp_down = 0.65,
@@ -68,15 +66,14 @@ end
             initial_units = 6.6666667,
         ),
         "Midgard_Wind" => (;
-            investment_group = "renewables",
+            investment_group = "renewables_max",
             capacity = 3.0,
-            investment_method = "simple",
             investment_integer = true,
-            is_seasonal = true,
+            use_inter_period_constraints = true,
             investable = true,
             max_energy_timeframe_partition = 4.5e6,
             investment_cost = 1300.0,
-            investment_limit = 80000.0,
+            investment_max_limit = 80000.0,
         ),
         "Valhalla_Waste_heat" =>
             (; capacity = 200.0, investment_cost = 1450, decommissionable = true),
@@ -110,7 +107,7 @@ end
             tulipa,
             asset,
             :consumer;
-            investment_limit = 0.0,
+            investment_max_limit = 0.0,
             initial_storage_level = 0.0,
             kwargs...,
             asset_extra_defaults...,
@@ -123,18 +120,16 @@ end
         tulipa,
         "Asgard_CCGT",
         :conversion,
-        investment_group = "ccgt",
+        investment_group = "ccgt_min",
         capacity = 500.0,
         investment_cost = 650.0,
         min_operating_point = 0.25,
-        investment_method = "simple",
         investment_integer = true,
         ramping = true,
         max_ramp_up = 0.5,
         max_ramp_down = 0.3,
         investable = true,
-        unit_commitment = true,
-        unit_commitment_method = "basic",
+        unit_commitment = "basic",
         units_on_cost = 0.97,
         conversion_efficiency = 0.55;
         initial_storage_level = 0.0,
@@ -144,13 +139,13 @@ end
         tulipa,
         "Midgard_CCGT",
         :conversion,
-        investment_group = "ccgt",
+        investment_group = "ccgt_min",
+        investable = true, # TEM requires members of investment groups to be investable
         capacity = 500.0,
         investment_cost = 650.0,
         min_operating_point = 0.4,
-        unit_commitment = true,
+        unit_commitment = "basic",
         unit_commitment_integer = true,
-        unit_commitment_method = "basic",
         conversion_efficiency = 0.5,
         decommissionable = true,
         initial_units = 5.0;
@@ -170,7 +165,7 @@ end
         "Valhalla_GT" => (;
             capacity = 500.0,
             investment_cost = 400.0,
-            investment_limit = 100000.0,
+            investment_max_limit = 100000.0,
             conversion_efficiency = 0.42,
         ),
         "Valhalla_H2_generator" =>
@@ -183,7 +178,6 @@ end
             tulipa,
             asset,
             :conversion,
-            investment_method = "simple",
             investment_integer = true,
             investable = true,
             initial_storage_level = 0.0; # why not leave default?
@@ -196,18 +190,17 @@ end
     storage = Dict(
         "Asgard_Battery" => (;
             capacity = 100.0,
-            investment_method = "simple",
             investment_integer = true,
             capacity_storage_energy = 10.0,
             use_binary_storage_method = "binary",
-            storage_method_energy = true,
+            storage_method_energy = "use_fixed_energy_to_power_ratio",
             energy_to_power_ratio = 100.0,
             investment_integer_storage_energy = true,
             investable = true,
             investment_cost = 300.0,
-            investment_limit = 25000.0,
+            investment_max_limit = 25000.0,
             investment_cost_storage_energy = 30.0,
-            investment_limit_storage_energy = 1000.0,
+            investment_max_limit_storage_energy = 1000.0,
             storage_charging_efficiency = 0.95,
             storage_discharging_efficiency = 0.95,
             initial_units = 7.25,
@@ -215,40 +208,38 @@ end
         "Midgard_Hydro" => (;
             capacity = 250.0,
             capacity_storage_energy = 50000.0,
-            is_seasonal = true,
+            use_inter_period_constraints = true,
             use_binary_storage_method = "relaxed_binary",
             storage_inflows = 10000.0,
             investment_cost = 1600.0,
-            investment_limit = 0.0,
+            investment_max_limit = 0.0,
             storage_charging_efficiency = 0.7,
             storage_discharging_efficiency = 1.0,
             decommissionable = true,
             initial_units = 1.0,
             initial_storage_units = 1.0,
-            initial_storage_level = 25000.0,
+            initial_storage_level = 0.5,          # per unit of capacity_storage_energy
         ),
         "Midgard_PHS" => (;
             capacity = 200.0,
-            investment_method = "simple",
             investment_integer = true,
             capacity_storage_energy = 100.0,
-            storage_method_energy = true,
+            storage_method_energy = "optimize_storage_capacity",
             energy_to_power_ratio = 1.0,
             investable = true,
             investment_cost = 800.0,
-            investment_limit = 5000.0,
+            investment_max_limit = 5000.0,
             investment_cost_storage_energy = 500.0,
-            investment_limit_storage_energy = 1000.0,
+            investment_max_limit_storage_energy = 1000.0,
             storage_charging_efficiency = 0.85,
             storage_discharging_efficiency = 0.85,
             initial_units = 1.75,
         ),
         "Valhalla_H2_storage" => (;
             capacity = 500.0,
-            investment_method = "simple",
             investment_integer = true,
             capacity_storage_energy = 100.0,
-            is_seasonal = true,
+            use_inter_period_constraints = true,
             energy_to_power_ratio = 10000.0,
             investment_integer_storage_energy = true,
             investable = true,
@@ -267,7 +258,7 @@ end
         tulipa,
         "Valhalla_E_balance",
         :consumer,
-        investment_limit = 0.0,
+        investment_max_limit = 0.0,
         decommissionable = true,
         initial_storage_level = 0.0;
         asset_extra_defaults...,
@@ -276,16 +267,16 @@ end
     # group assets
     add_asset_group!(
         tulipa,
-        "renewables",
+        "renewables_max",
         2030,
-        invest_method = true,
+        invest_method = "use_only_investment_units",
         max_investment_limit = 40000,
     )
     add_asset_group!(
         tulipa,
-        "ccgt",
+        "ccgt_min",
         2030,
-        invest_method = true,
+        invest_method = "use_only_investment_units",
         min_investment_limit = 10000,
     )
 
@@ -294,7 +285,7 @@ end
         ("Asgard_E_demand", "Midgard_E_demand") => (;
             investment_integer = true,
             investment_cost = 2000.0,
-            investment_limit = 50000.0,
+            investment_max_limit = 50000.0,
         ),
         ("Asgard_E_demand", "Valhalla_E_balance") => (;
             investment_cost = 5000.0,
@@ -510,6 +501,15 @@ end
         "28x3+42x2",
     )
     set_partition!(tulipa, "Asgard_Solar", "Asgard_Battery", 2030, 1, "math", "42x2+28x3")
+    set_partition!(
+        tulipa,
+        "Midgard_Hydro",
+        "Midgard_E_demand",
+        2030,
+        1,
+        "math",
+        "28x3+42x2",
+    )
     set_partition!(tulipa, "Asgard_Solar", "Asgard_Battery", 2030, 2, "math", "4x3+3x4")
     set_partition!(tulipa, "Asgard_Solar", "Asgard_E_demand", 2030, 2, "math", "3x4+4x3")
 

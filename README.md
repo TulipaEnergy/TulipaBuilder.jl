@@ -23,6 +23,12 @@ TulipaBuilder.jl provides a graph-based approach to building energy system model
   column names to type/default metadata. `TulipaEnergyModel.schema` satisfies this automatically.
 - **Simplified workflow**: Streamlined process from model creation to optimization
 
+### Supported TulipaEnergyModel versions
+
+TulipaBuilder supports the latest minor release of TulipaEnergyModel.
+Older releases may work, but we do not test them.
+This holds at least until a 1.0 release of both TulipaEnergyModel and TulipaBuilder.
+
 ### Magic transformations
 
 TulipaBuilder.jl takes liberties when creating TulipaEnergyModel problems.
@@ -30,11 +36,11 @@ These implicit assumption are made to make our life easier, with the drawback of
 
 Here we list all these magic transformations, to help debug possible unexpected behaviour, and to drive development and testing of the package.
 
-- The `year_data` is automatically determined from the attached profiles and attached commission and milestone data.
+- The years, with their lengths and milestone status, are automatically determined from the attached profiles and attached commission and milestone data.
 - If data is attached via `attach_milestone_data!`, the year is further marker as `is_milestone = true`.
-- Missing combinations of `asset` and `year_data` are passed to `asset_milestone` and `asset_commission` rows
-- Missing combinations of `flow` and `year_data` are passed to `flow_milestone` and `flow_commission` rows
-- Fills `asset_both` for `asset.investment_method != 'compact'` using the rows of `asset_milestone`, repeating `commission_year=milestone_year`
+- Missing combinations of `asset` and milestone year are passed to `asset_milestone` and `asset_commission` rows
+- Missing combinations of `flow` and milestone year are passed to `flow_milestone` and `flow_commission` rows
+- Fills `asset_both` for every asset using the rows of `asset_milestone`, repeating `commission_year=milestone_year`. Assets with a compact `vintage_method` add their other vintages with `attach_both_years_data!`
 - Sets `assets_profiles.commission_year = profiles.year` for attached profiles.
 - Sets years as `milestone` years when a profile is attached to them.
 - Propagates asset information to asset_milestone and asset_commission information so the year doesn't have to be explicitly set.
