@@ -12,7 +12,7 @@
         # flow
         technical_lifetime = 10,            # default is 1
         discount_rate = 0.02,               # default is 0.0
-        investment_limit = 0.0,             # default is null
+        investment_max_limit = 0.0,             # default is null
     )
 
     # Most of these are `missing` in the expected tables, so populate_with_defaults will
@@ -40,19 +40,19 @@ end
             investment_integer = true,
             investable = true,
             investment_cost = 350.0,
-            investment_limit = 50000.0,
+            investment_max_limit = 50000.0,
         ),
         "G_imports" => (;
             capacity = 75000.0,
             decommissionable = true,
             initial_units = 1.0,
-            investment_limit = 0.0,
+            investment_max_limit = 0.0,
         ),
         "Midgard_E_imports" => (;
             capacity = 500.0,
             decommissionable = true,
             initial_units = 1.0,
-            investment_limit = 0.0,
+            investment_max_limit = 0.0,
         ),
         "Midgard_Nuclear_SMR" => (;
             capacity = 150.0,
@@ -73,7 +73,7 @@ end
             investable = true,
             max_energy_timeframe_partition = 4.5e6,
             investment_cost = 1300.0,
-            investment_limit = 80000.0,
+            investment_max_limit = 80000.0,
         ),
         "Valhalla_Waste_heat" =>
             (; capacity = 200.0, investment_cost = 1450, decommissionable = true),
@@ -107,7 +107,7 @@ end
             tulipa,
             asset,
             :consumer;
-            investment_limit = 0.0,
+            investment_max_limit = 0.0,
             initial_storage_level = 0.0,
             kwargs...,
             asset_extra_defaults...,
@@ -165,7 +165,7 @@ end
         "Valhalla_GT" => (;
             capacity = 500.0,
             investment_cost = 400.0,
-            investment_limit = 100000.0,
+            investment_max_limit = 100000.0,
             conversion_efficiency = 0.42,
         ),
         "Valhalla_H2_generator" =>
@@ -198,9 +198,9 @@ end
             investment_integer_storage_energy = true,
             investable = true,
             investment_cost = 300.0,
-            investment_limit = 25000.0,
+            investment_max_limit = 25000.0,
             investment_cost_storage_energy = 30.0,
-            investment_limit_storage_energy = 1000.0,
+            investment_max_limit_storage_energy = 1000.0,
             storage_charging_efficiency = 0.95,
             storage_discharging_efficiency = 0.95,
             initial_units = 7.25,
@@ -212,7 +212,7 @@ end
             use_binary_storage_method = "relaxed_binary",
             storage_inflows = 10000.0,
             investment_cost = 1600.0,
-            investment_limit = 0.0,
+            investment_max_limit = 0.0,
             storage_charging_efficiency = 0.7,
             storage_discharging_efficiency = 1.0,
             decommissionable = true,
@@ -228,9 +228,9 @@ end
             energy_to_power_ratio = 1.0,
             investable = true,
             investment_cost = 800.0,
-            investment_limit = 5000.0,
+            investment_max_limit = 5000.0,
             investment_cost_storage_energy = 500.0,
-            investment_limit_storage_energy = 1000.0,
+            investment_max_limit_storage_energy = 1000.0,
             storage_charging_efficiency = 0.85,
             storage_discharging_efficiency = 0.85,
             initial_units = 1.75,
@@ -258,7 +258,7 @@ end
         tulipa,
         "Valhalla_E_balance",
         :consumer,
-        investment_limit = 0.0,
+        investment_max_limit = 0.0,
         decommissionable = true,
         initial_storage_level = 0.0;
         asset_extra_defaults...,
@@ -285,7 +285,7 @@ end
         ("Asgard_E_demand", "Midgard_E_demand") => (;
             investment_integer = true,
             investment_cost = 2000.0,
-            investment_limit = 50000.0,
+            investment_max_limit = 50000.0,
         ),
         ("Asgard_E_demand", "Valhalla_E_balance") => (;
             investment_cost = 5000.0,

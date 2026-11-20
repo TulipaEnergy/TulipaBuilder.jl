@@ -60,7 +60,7 @@ end
         :producer;
         asset_extra_defaults...,
         capacity = 400.0,
-        investment_limit = 10000.0,
+        investment_max_limit = 10000.0,
         vintage_method = "compact_efficiencies",
         investment_integer = true,
         technical_lifetime = 25,
@@ -138,7 +138,7 @@ end
         2025,
         fixed_cost = 31.0,
         investment_cost = 41.0,
-        investment_limit = 10000.0,
+        investment_max_limit = 10000.0,
     )
     attach_commission_data!(
         tulipa,
@@ -146,7 +146,7 @@ end
         2030,
         fixed_cost = 32.0,
         investment_cost = 42.0,
-        investment_limit = 10000.0,
+        investment_max_limit = 10000.0,
     )
     attach_commission_data!(
         tulipa,
@@ -154,7 +154,7 @@ end
         2050,
         fixed_cost = 33.0,
         investment_cost = 43.0,
-        investment_limit = 10000.0,
+        investment_max_limit = 10000.0,
     )
     # ocgt
     attach_commission_data!(tulipa, "ocgt", 2030, fixed_cost = 41.0, investment_cost = 25.0)
@@ -300,7 +300,7 @@ end
         2025,
         fixed_cost = 2.0,
         investment_cost = 350.0,
-        investment_limit = 100.0,
+        investment_max_limit = 100.0,
         capacity_coefficient = 0.8,
         producer_efficiency = 0.5,
     )
@@ -310,7 +310,7 @@ end
         "demand",
         2030,
         fixed_cost = 2.0,
-        investment_limit = 100.0,
+        investment_max_limit = 100.0,
         capacity_coefficient = 0.9,
     )
     attach_commission_data!(
@@ -319,7 +319,7 @@ end
         "demand",
         2050,
         fixed_cost = 3.0,
-        investment_limit = 100.0,
+        investment_max_limit = 100.0,
     )
     attach_commission_data!(tulipa, "demand", "battery", 2030, producer_efficiency = 0.2)
     attach_commission_data!(tulipa, "ens", "demand", 2050, producer_efficiency = 0.4)
