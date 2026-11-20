@@ -4,7 +4,7 @@
             "asset" => Dict("type" => "VARCHAR"),
             "type" => Dict("type" => "VARCHAR"),
             "capacity" => Dict("type" => "DOUBLE", "default" => 0.0),
-            "investment_method" => Dict("type" => "VARCHAR", "default" => "none"),
+            "vintage_method" => Dict("type" => "VARCHAR", "default" => "aggregated"),
         ),
         "asset_both" => Dict(
             "asset" => Dict("type" => "VARCHAR"),
@@ -46,12 +46,18 @@
             "milestone_year" => Dict("type" => "INT64"),
             "operational_cost" => Dict("type" => "DOUBLE", "default" => 0.0),
         ),
-        "group_asset" => Dict(
+        "investment_group_asset" => Dict(
             "name" => Dict("type" => "VARCHAR"),
             "milestone_year" => Dict("type" => "INT64"),
             "invest_method" => Dict("type" => "BOOLEAN"),
-            "min_investment_limit" => Dict("type" => "DOUBLE"),
-            "max_investment_limit" => Dict("type" => "DOUBLE"),
+            "constraint_sense" => Dict("type" => "VARCHAR"),
+            "rhs" => Dict("type" => "DOUBLE"),
+        ),
+        "investment_group_asset_membership" => Dict(
+            "asset" => Dict("type" => "VARCHAR"),
+            "group_name" => Dict("type" => "VARCHAR"),
+            "milestone_year" => Dict("type" => "INT64"),
+            "coefficient" => Dict("type" => "DOUBLE", "default" => 1.0),
         ),
         "assets_rep_periods_partitions" => Dict(
             "asset" => Dict("type" => "VARCHAR"),

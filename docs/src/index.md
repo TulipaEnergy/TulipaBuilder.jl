@@ -8,5 +8,9 @@ CurrentModule = TulipaBuilder
 It provides a graph-based constructive interface to defining the assets and flows of an energy system, their respective data, and profiles.
 The interface is **heavily** tied to [TulipaEnergyModel's input schema](https://tulipaenergy.github.io/TulipaEnergyModel.jl/stable/20-user-guide/54-input-table-schemas/), but it glosses over the complexity.
 
+TulipaBuilder supports the latest minor release of TulipaEnergyModel.
+Older releases may work, but we do not test them.
+This holds at least until a 1.0 release of both TulipaEnergyModel and TulipaBuilder.
+
 !!! warning
     TulipaBuilder is still in development, and there is no guarantee that it is creating the model that you expect. Please check the output and open issues if you see something wrong.

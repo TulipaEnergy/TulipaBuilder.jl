@@ -37,7 +37,7 @@ end
 
     ### assets
 
-    # battery: storage, simple investment
+    # battery: storage, aggregated vintage
     add_asset!(
         tulipa,
         "battery",
@@ -45,16 +45,15 @@ end
         asset_extra_defaults...,
         capacity = 50.0,
         investable = true,
-        investment_method = "simple",
         investment_integer = true,
         technical_lifetime = 30,
         capacity_storage_energy = 100.0,
-        storage_method_energy = true,
+        storage_method_energy = "optimize_storage_capacity",
         storage_charging_efficiency = 0.95,
         storage_discharging_efficiency = 0.95,
     )
 
-    # ccgt: producer, semi-compact investment
+    # ccgt: producer, compact_efficiencies vintage
     add_asset!(
         tulipa,
         "ccgt",
@@ -62,7 +61,7 @@ end
         asset_extra_defaults...,
         capacity = 400.0,
         investment_limit = 10000.0,
-        investment_method = "semi-compact",
+        vintage_method = "compact_efficiencies",
         investment_integer = true,
         technical_lifetime = 25,
     )
@@ -73,31 +72,29 @@ end
     # ens: producer, no investment
     add_asset!(tulipa, "ens", :producer; capacity = 1115.0, asset_extra_defaults...)
 
-    # ocgt: producer, simple investment
+    # ocgt: producer, aggregated vintage
     add_asset!(
         tulipa,
         "ocgt",
         :producer;
         capacity = 100.0,
         investable = true,
-        investment_method = "simple",
         investment_integer = true,
         asset_extra_defaults...,
     )
 
-    # solar: producer, simple investment
+    # solar: producer, aggregated vintage
     add_asset!(
         tulipa,
         "solar",
         :producer;
         capacity = 10.0,
         investable = true,
-        investment_method = "simple",
         investment_integer = true,
         asset_extra_defaults...,
     )
 
-    # wind: producer, compact investment
+    # wind: producer, compact_profiles vintage
     add_asset!(
         tulipa,
         "wind",
@@ -105,7 +102,7 @@ end
         asset_extra_defaults...,
         capacity = 50.0,
         investable = true,
-        investment_method = "compact",
+        vintage_method = "compact_profiles",
         investment_integer = true,
         technical_lifetime = 30,
     )
@@ -395,6 +392,15 @@ end
             * EXCLUDE (rep_period),
             rep_period - min(rep_period) OVER (PARTITION BY milestone_year) + 1 AS rep_period
         FROM rep_periods_data
+        """,
+    )
+    # TB has no API for model_parameters yet, so the test writes it directly.
+    # The other columns get their defaults from populate_with_defaults!.
+    DuckDB.query(
+        connection,
+        """
+        CREATE TABLE model_parameters AS
+        SELECT 2020 AS discount_year, 0.03 AS discount_rate
         """,
     )
     TEM.populate_with_defaults!(connection)

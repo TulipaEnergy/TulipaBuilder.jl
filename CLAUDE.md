@@ -33,6 +33,13 @@ The package uses a graph-based approach where assets (producers, consumers) are 
 - This allows the same TulipaBuilder code to work with any compatible schema dict, including different TulipaEnergyModel versions
 - TulipaEnergyModel is **not** a direct dependency of TulipaBuilder; callers pass `TEM.schema` explicitly
 
+### Supported TulipaEnergyModel Versions
+
+TulipaBuilder supports the latest minor release of TulipaEnergyModel. Older releases may work, but we do not test them. This holds at least until a 1.0 release of both TulipaEnergyModel and TulipaBuilder.
+
+- When a new TEM minor release breaks TulipaBuilder, fix TulipaBuilder for the new release; do not add code paths to keep older releases working
+- The schema-driven rules above still apply: they keep the code simple to update, not a promise to support many TEM versions
+
 ## Essential Commands
 
 ### Testing

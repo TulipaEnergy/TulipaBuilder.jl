@@ -13,22 +13,22 @@
     close(connection)
 end
 
-@testitem "Compact and semi-compact assets do not get asset_both auto-propagated" setup =
+@testitem "Assets of every vintage_method get asset_both auto-propagated" setup =
     [CommonSetup, TestSchema] tags = [:unit, :fast, :schema] begin
     tulipa = TulipaData{Symbol}()
-    add_asset!(tulipa, :simple, :producer, investment_method = "simple")
-    add_asset!(tulipa, :compact_asset, :producer, investment_method = "compact")
-    add_asset!(tulipa, :semi, :producer, investment_method = "semi-compact")
-    add_asset!(tulipa, :none_asset, :producer, investment_method = "none")
+    add_asset!(tulipa, :aggregated_asset, :producer, vintage_method = "aggregated")
+    add_asset!(tulipa, :compact_asset, :producer, vintage_method = "compact_profiles")
+    add_asset!(tulipa, :semi, :producer, vintage_method = "compact_efficiencies")
+    add_asset!(tulipa, :default_asset, :producer)
     tulipa.years[2025] = Dict(:length => 1, :is_milestone => true)
 
     connection = create_connection(tulipa, TestSchema.schema)
     asset_both_assets =
         Set(row.asset for row in DuckDB.query(connection, "FROM asset_both"))
-    @test "simple" in asset_both_assets
-    @test "none_asset" in asset_both_assets
-    @test !("compact_asset" in asset_both_assets)
-    @test !("semi" in asset_both_assets)
+    @test "aggregated_asset" in asset_both_assets
+    @test "default_asset" in asset_both_assets
+    @test "compact_asset" in asset_both_assets
+    @test "semi" in asset_both_assets
     close(connection)
 end
 
