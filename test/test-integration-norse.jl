@@ -218,7 +218,7 @@ end
             decommissionable = true,
             initial_units = 1.0,
             initial_storage_units = 1.0,
-            initial_storage_level = 25000.0,
+            initial_storage_level = 0.5,          # per unit of capacity_storage_energy
         ),
         "Midgard_PHS" => (;
             capacity = 200.0,
