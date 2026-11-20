@@ -49,7 +49,7 @@
         "investment_group_asset" => Dict(
             "name" => Dict("type" => "VARCHAR"),
             "milestone_year" => Dict("type" => "INT64"),
-            "invest_method" => Dict("type" => "BOOLEAN"),
+            "invest_method" => Dict("type" => "VARCHAR"),
             "constraint_sense" => Dict("type" => "VARCHAR"),
             "rhs" => Dict("type" => "DOUBLE"),
         ),
