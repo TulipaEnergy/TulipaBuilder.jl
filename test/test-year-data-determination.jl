@@ -210,7 +210,7 @@ end
 
     tulipa = TulipaData{Symbol}()
 
-    add_asset!(tulipa, :solar, :producer, investment_method = "simple")
+    add_asset!(tulipa, :solar, :producer)
     add_asset!(tulipa, :demand, :consumer)
     add_flow!(tulipa, :solar, :demand)
 

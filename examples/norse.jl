@@ -43,7 +43,6 @@ producers = Dict(
     "Asgard_Solar" => (;
         investment_group = "renewables",
         capacity = 100.0,
-        investment_method = "simple",
         investment_integer = true,
         investable = true,
         investment_cost = 350.0,
@@ -63,7 +62,6 @@ producers = Dict(
     ),
     "Midgard_Nuclear_SMR" => (;
         capacity = 150.0,
-        investment_method = "simple",
         is_seasonal = true,
         ramping = true,
         max_ramp_up = 0.75,
@@ -76,7 +74,6 @@ producers = Dict(
     "Midgard_Wind" => (;
         investment_group = "renewables",
         capacity = 3.0,
-        investment_method = "simple",
         investment_integer = true,
         is_seasonal = true,
         investable = true,
@@ -133,7 +130,6 @@ add_asset!(
     capacity = 500.0,
     investment_cost = 650.0,
     min_operating_point = 0.25,
-    investment_method = "simple",
     investment_integer = true,
     ramping = true,
     max_ramp_up = 0.5,
@@ -189,7 +185,6 @@ for (asset, kwargs) in other_converters
         tulipa,
         asset,
         :conversion,
-        investment_method = "simple",
         investment_integer = true,
         investable = true,
         initial_storage_level = 0.0; # why not leave default?
@@ -202,7 +197,6 @@ end
 storage = Dict(
     "Asgard_Battery" => (;
         capacity = 100.0,
-        investment_method = "simple",
         investment_integer = true,
         capacity_storage_energy = 10.0,
         use_binary_storage_method = "binary",
@@ -235,7 +229,6 @@ storage = Dict(
     ),
     "Midgard_PHS" => (;
         capacity = 200.0,
-        investment_method = "simple",
         investment_integer = true,
         capacity_storage_energy = 100.0,
         storage_method_energy = true,
@@ -251,7 +244,6 @@ storage = Dict(
     ),
     "Valhalla_H2_storage" => (;
         capacity = 500.0,
-        investment_method = "simple",
         investment_integer = true,
         capacity_storage_energy = 100.0,
         is_seasonal = true,

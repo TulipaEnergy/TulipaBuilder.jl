@@ -4,7 +4,7 @@
             "asset" => Dict("type" => "VARCHAR"),
             "type" => Dict("type" => "VARCHAR"),
             "capacity" => Dict("type" => "DOUBLE", "default" => 0.0),
-            "investment_method" => Dict("type" => "VARCHAR", "default" => "none"),
+            "vintage_method" => Dict("type" => "VARCHAR", "default" => "aggregated"),
         ),
         "asset_both" => Dict(
             "asset" => Dict("type" => "VARCHAR"),

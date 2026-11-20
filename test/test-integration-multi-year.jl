@@ -37,7 +37,7 @@ end
 
     ### assets
 
-    # battery: storage, simple investment
+    # battery: storage, aggregated vintage
     add_asset!(
         tulipa,
         "battery",
@@ -45,7 +45,6 @@ end
         asset_extra_defaults...,
         capacity = 50.0,
         investable = true,
-        investment_method = "simple",
         investment_integer = true,
         technical_lifetime = 30,
         capacity_storage_energy = 100.0,
@@ -54,7 +53,7 @@ end
         storage_discharging_efficiency = 0.95,
     )
 
-    # ccgt: producer, semi-compact investment
+    # ccgt: producer, compact_efficiencies vintage
     add_asset!(
         tulipa,
         "ccgt",
@@ -62,7 +61,7 @@ end
         asset_extra_defaults...,
         capacity = 400.0,
         investment_limit = 10000.0,
-        investment_method = "semi-compact",
+        vintage_method = "compact_efficiencies",
         investment_integer = true,
         technical_lifetime = 25,
     )
@@ -73,31 +72,29 @@ end
     # ens: producer, no investment
     add_asset!(tulipa, "ens", :producer; capacity = 1115.0, asset_extra_defaults...)
 
-    # ocgt: producer, simple investment
+    # ocgt: producer, aggregated vintage
     add_asset!(
         tulipa,
         "ocgt",
         :producer;
         capacity = 100.0,
         investable = true,
-        investment_method = "simple",
         investment_integer = true,
         asset_extra_defaults...,
     )
 
-    # solar: producer, simple investment
+    # solar: producer, aggregated vintage
     add_asset!(
         tulipa,
         "solar",
         :producer;
         capacity = 10.0,
         investable = true,
-        investment_method = "simple",
         investment_integer = true,
         asset_extra_defaults...,
     )
 
-    # wind: producer, compact investment
+    # wind: producer, compact_profiles vintage
     add_asset!(
         tulipa,
         "wind",
@@ -105,7 +102,7 @@ end
         asset_extra_defaults...,
         capacity = 50.0,
         investable = true,
-        investment_method = "compact",
+        vintage_method = "compact_profiles",
         investment_integer = true,
         technical_lifetime = 30,
     )

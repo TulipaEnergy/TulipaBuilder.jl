@@ -7,7 +7,6 @@
         :ccgt,
         :producer,
         capacity = 2.0,
-        investment_method = "simple",
         investable = true,
         investment_cost = 3.0,
     )
@@ -27,7 +26,6 @@
         :ocgt,
         :producer,
         capacity = 3.0,
-        investment_method = "simple",
         investable = true,
         investment_cost = 4.0,
     )

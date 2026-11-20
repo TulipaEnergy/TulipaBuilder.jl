@@ -35,7 +35,6 @@ end
         "ccgt",
         :producer;
         capacity = 400.0,
-        investment_method = "simple",
         investment_integer = true,
         investable = true,
         investment_cost = 40.0,
@@ -56,7 +55,6 @@ end
         "ocgt",
         :producer;
         capacity = 100.0,
-        investment_method = "simple",
         investment_integer = true,
         investable = true,
         investment_cost = 25.0,
@@ -68,7 +66,6 @@ end
         :producer;
         description = "Solar",
         capacity = 10.0,
-        investment_method = "simple",
         investment_integer = true,
         investable = true,
         investment_cost = 50.0,
@@ -79,7 +76,6 @@ end
         "wind",
         :producer;
         capacity = 50.0,
-        investment_method = "simple",
         investment_integer = true,
         investable = true,
         investment_cost = 70.0,

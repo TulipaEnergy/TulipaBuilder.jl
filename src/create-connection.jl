@@ -112,15 +112,10 @@ function propagate_year_data!(tulipa, schema)
     end
 
     # Propagate from asset to asset_both
-    # Only for non-compact/non-semi-compact assets (compact/semi-compact manage their own vintages)
-    # Limited to milestone_year=commission_year
+    # Limited to milestone_year=commission_year. TEM needs this row for every
+    # vintage_method; compact assets add their other vintages explicitly.
     for asset_name in MetaGraphsNext.labels(tulipa.graph)
         asset = tulipa.graph[asset_name]
-        investment_method = get(asset.basic_data, :investment_method, "none")
-        if investment_method in ("compact", "semi-compact")
-            continue
-        end
-
         relevant_keys = Dict(
             key => value for (key, value) in asset.basic_data if
             haskey(schema["asset_both"], string(key))
@@ -827,19 +822,6 @@ function create_connection(tulipa::TulipaData, schema; db = ":memory:")
     DuckDB.query(connection, "DROP TABLE year_data")
 
     # Complement the asset_both tables with rows from asset_milestone
-    ## Only check for 'compact' if the investment_method column exists in the
-    ## schema and was set for at least one asset
-    has_investment_method_column =
-        haskey(schema["asset"], "investment_method") && any(
-            haskey(tulipa.graph[asset_name].basic_data, :investment_method) for
-            asset_name in MetaGraphsNext.labels(tulipa.graph)
-        )
-    where_investment_method = if has_investment_method_column
-        "WHERE asset.investment_method NOT IN ('compact', 'semi-compact')"
-    else
-        ""
-    end
-    ## SQL
     DuckDB.query(
         connection,
         "INSERT INTO asset_both BY NAME (
@@ -852,7 +834,6 @@ function create_connection(tulipa::TulipaData, schema; db = ":memory:")
             ANTI JOIN asset_both
                 ON asset_both.asset = asset_milestone.asset
                 AND asset_both.milestone_year = asset_milestone.milestone_year
-            $where_investment_method
         )
         ",
     )
