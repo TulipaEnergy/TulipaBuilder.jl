@@ -47,7 +47,7 @@ add_asset!(
     investment_integer = true,
     investable = true,
     investment_cost = 40.0,
-    investment_limit = 10000.0,
+    investment_max_limit = 10000.0,
     ;
     asset_extra_defaults...,
 )
